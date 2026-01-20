@@ -30,6 +30,44 @@ The functions created as part of this project are visible by selecting `package:
 
 -   This repo is provided as-is, and is frequently updated. At present, the repository is both a package and an active workspace. In due course I may aim to separate these two roles more explicitly.
 
+## IFoA Collaboration Analysis
+
+The `reports/ifoa/` directory contains analysis for the Institute and Faculty of Actuaries collaboration, examining transitions between Employed and Long-term Sick economic states.
+
+### Regenerating the Models
+
+The fitted models (`.rds` files) are excluded from the repository due to their size (~160MB total). To regenerate them:
+
+```bash
+# From the project root directory
+# On macOS (prevents sleep during long-running process):
+./reports/ifoa/run_models.sh
+
+# Or manually:
+caffeinate -dims Rscript reports/ifoa/_fit_models.R 2>&1 | tee reports/ifoa/logs/model_fit.log
+
+# On Linux/Windows (no caffeinate needed):
+Rscript reports/ifoa/_fit_models.R 2>&1 | tee reports/ifoa/logs/model_fit.log
+```
+
+This will:
+1. Extract data from UKHLS waves a-k (2009-2020)
+2. Fit 8 multinomial logistic regression models
+3. Save models to `reports/ifoa/models/`
+4. Log output to `reports/ifoa/logs/model_fit.log`
+
+**Note**: The script requires the UKHLS data to be set up as described above. Model fitting takes approximately 30-60 minutes depending on hardware.
+
+### Rendering the Report
+
+Once models are generated:
+
+```bash
+quarto render reports/ifoa/02_model_results.qmd --to html
+```
+
+The output `02_model_results.html` is self-contained (embed-resources: true) and can be shared directly.
+
 ## Further information
 
 For further information please contact me at [jon.minton\@phs.scot](mailto:jon.minton@phs.scot){.email}
