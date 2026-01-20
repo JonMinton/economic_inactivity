@@ -1,0 +1,454 @@
+---
+title: "Economic Status Transitions: Employed and Long-term Sick"
+subtitle: "Preliminary Analysis for IFoA Collaboration"
+author:
+  - "Jon Minton (Public Health Scotland)"
+date: today
+format:
+  html:
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show R code"
+    number-sections: true
+    fig-width: 8
+    fig-height: 6
+  pdf:
+    toc: true
+    number-sections: true
+  docx:
+    toc: true
+    number-sections: true
+bibliography: references.bib
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Preamble: Scope and Analytical Choices
+
+This preliminary report addresses the IFoA brief to examine transitions between **Employed** and **Long-term Sick** economic statuses using the UK Household Longitudinal Study (UKHLS). Before presenting results, we explicitly document the analytical choices made to ensure transparency and reproducibility.
+
+## Pre-specification of Analytical Decisions
+
+To minimise researcher degrees of freedom, we document the following decisions made *before* analysing the data:
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Data source** | UKHLS waves 1-11 (2009-2021) | Largest UK panel study with economic status |
+| **Transition definition** | Adjacent waves only | Avoids complications of variable gap lengths |
+| **Age range** | 16-64 (working age) | Standard UK working age definition |
+| **Economic status categories** | 7-level (Level 3) | Distinguishes LT Sick from other inactive |
+| **Health measures** | SF-12 MCS/PCS (continuous) | More granular than binary measures |
+| **Occupation classification** | NS-SEC 3-class | Balance between detail and cell counts |
+| **Missing data** | Complete cases only | Avoids imputation assumptions |
+| **Model type** | Multinomial logistic regression | Standard for categorical outcomes |
+
+## Alternative Interpretations Not Pursued (Yet)
+
+The IFoA brief could reasonably be interpreted in other ways:
+
+1. **Longer transition gaps** - e.g., 2-year or 5-year transitions
+2. **NS-SEC 5-class or 8-class** - more occupational detail but sparser cells
+3. **Binary health measure** - limiting long-term illness (yes/no)
+4. **Imputed missing data** - could increase sample size
+
+These alternatives can be explored in subsequent analyses if the IFoA considers them valuable.
+
+```{r}
+#| label: setup
+#| include: false
+
+library(here)
+library(tidyverse)
+library(haven)
+library(nnet)
+library(knitr)
+library(kableExtra)
+library(scales)
+
+# Source package functions directly
+r_files <- list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE)
+for (f in r_files) source(f)
+
+# Load package data (required by simplify_econ_status_categories)
+load(here::here("data", "econActGroups.rda"))
+
+# Data location (used by package functions)
+base_dir_location <- "big_data/UKDA-6614-stata/stata/stata13_se/ukhls"
+
+# For development/testing: use fewer iterations
+# Set to 1000 for final analysis
+MODEL_MAXIT <- 100  # Reduced for testing - increase to 1000 for production
+```
+
+# Data Extraction and Preparation
+
+We extract individual-level data using the package's standard extraction functions, following the pattern established in the existing papers.
+
+```{r}
+#| label: extract-data
+#| cache: true
+
+# Variables to extract - following paper_01a pattern
+varnames <- c(
+  "jbstat",        # Economic activity status (required)
+  "dvage",         # Age
+  "sex",           # Sex
+  "sf12mcs_dv",    # SF-12 Mental Component Score
+  "sf12pcs_dv"     # SF-12 Physical Component Score
+)
+
+extract_what <- c(
+  "labels",   # jbstat - categorical
+  "values",   # dvage - numeric
+  "labels",   # sex - categorical
+  "values",   # sf12mcs - numeric
+  "values"    # sf12pcs - numeric
+)
+
+# Use the standard package function to extract and reshape data
+# This automatically adds next_status via pull_next_wave_status()
+ind_data <- get_ind_level_vars_for_selected_waves(
+  varnames = varnames,
+  vartypes = extract_what,
+  waves = letters[1:11],  # waves a through k
+  econLevel = 3,          # 7-level economic status categorisation
+  verbose = FALSE
+)
+
+cat("Total observations extracted:", nrow(ind_data), "\n")
+cat("Unique individuals:", n_distinct(ind_data$pidp), "\n")
+```
+
+```{r}
+#| label: prepare-data
+
+# Follow the paper_01a pattern exactly:
+# 1. Rename dvage to age
+# 2. Convert negatives to NA
+# 3. Standardise health scores
+# 4. Filter to age range
+# 5. Complete cases filter
+
+ind_data_standardised <- ind_data |>
+  rename(age = dvage) |>
+  mutate(across(c(age, sf12mcs_dv, sf12pcs_dv), function(x) ifelse(x < 0, NA, x))) |>
+  mutate(across(c(sf12mcs_dv, sf12pcs_dv), standardise_scores)) |>
+  filter(between(age, 16, 64)) |>
+  filter(complete.cases(age, sex, sf12mcs_dv, sf12pcs_dv, this_status, next_status))
+
+cat("Analysis sample size:", format(nrow(ind_data_standardised), big.mark=","), "\n")
+cat("Unique individuals:", format(n_distinct(ind_data_standardised$pidp), big.mark=","), "\n")
+```
+
+Now extract NS-SEC separately and merge.
+
+```{r}
+#| label: extract-nssec
+#| cache: true
+
+# Extract NS-SEC 3-class for each wave
+nssec_data <- lapply(letters[1:11], function(w) {
+  filepath <- here::here(base_dir_location, paste0(w, "_indresp.dta"))
+  if (!file.exists(filepath)) return(NULL)
+  tryCatch({
+    df <- read_dta(filepath, col_select = c("pidp", paste0(w, "_jbnssec3_dv")))
+    names(df) <- c("pidp", "nssec3_raw")
+    df$wave <- w
+    df
+  }, error = function(e) NULL)
+}) %>% bind_rows()
+
+# Clean NS-SEC values
+nssec_clean <- nssec_data %>%
+  mutate(
+    nssec3 = case_when(
+      nssec3_raw < 0 ~ NA_character_,
+      nssec3_raw == 1 ~ "Management & professional",
+      nssec3_raw == 2 ~ "Intermediate",
+      nssec3_raw == 3 ~ "Routine",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  select(pidp, wave, nssec3)
+
+# Merge with main data
+ind_data_standardised <- ind_data_standardised %>%
+  left_join(nssec_clean, by = c("pidp", "wave"))
+
+cat("Observations with valid NS-SEC:", format(sum(!is.na(ind_data_standardised$nssec3)), big.mark=","), "\n")
+```
+
+```{r}
+#| label: add-derived-vars
+
+# Add age groups and year
+analysis_data <- ind_data_standardised %>%
+  mutate(
+    age_group = cut(age,
+                    breaks = c(16, 25, 35, 45, 55, 64),
+                    labels = c("16-24", "25-34", "35-44", "45-54", "55-64"),
+                    include.lowest = TRUE),
+    year = case_when(
+      wave == "a" ~ 2009, wave == "b" ~ 2010, wave == "c" ~ 2011,
+      wave == "d" ~ 2012, wave == "e" ~ 2013, wave == "f" ~ 2014,
+      wave == "g" ~ 2015, wave == "h" ~ 2016, wave == "i" ~ 2017,
+      wave == "j" ~ 2018, wave == "k" ~ 2019
+    )
+  )
+```
+
+# Sample Description
+
+## Demographic Distribution
+
+```{r}
+#| label: tbl-demographics
+#| tbl-cap: "Sample characteristics by current economic status"
+
+analysis_data %>%
+  group_by(this_status) %>%
+  summarise(
+    N = n(),
+    `Mean Age` = round(mean(age), 1),
+    `% Female` = round(100 * mean(sex == "female"), 1),
+    `Mean MH Score (std)` = round(mean(sf12mcs_dv), 2),
+    `Mean PH Score (std)` = round(mean(sf12pcs_dv), 2),
+    .groups = "drop"
+  ) %>%
+  kable(format.args = list(big.mark = ",")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Transition Matrix (Overall)
+
+```{r}
+#| label: tbl-transitions-overall
+#| tbl-cap: "Transition matrix: current status (rows) to next wave status (columns), row percentages"
+
+transition_matrix <- analysis_data %>%
+  count(this_status, next_status) %>%
+  group_by(this_status) %>%
+  mutate(pct = round(100 * n / sum(n), 1)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  pivot_wider(names_from = next_status, values_from = pct, values_fill = 0)
+
+transition_matrix %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+# Focus: Employed and Long-term Sick Transitions
+
+The IFoA brief specifically requests analysis of:
+
+1. **Employed → Long-term Sick** transitions
+2. **Long-term Sick → Employed** transitions
+
+```{r}
+#| label: focus-transitions
+
+employed_data <- analysis_data %>% filter(this_status == "Employed")
+lts_data <- analysis_data %>% filter(this_status == "LT Sick")
+
+cat("Employed at wave t:", format(nrow(employed_data), big.mark = ","), "observations\n")
+cat("  - Transition to LT Sick:", format(sum(employed_data$next_status == "LT Sick"), big.mark = ","),
+    "(", round(100 * mean(employed_data$next_status == "LT Sick"), 2), "%)\n")
+
+cat("\nLT Sick at wave t:", format(nrow(lts_data), big.mark = ","), "observations\n")
+cat("  - Transition to Employed:", format(sum(lts_data$next_status == "Employed"), big.mark = ","),
+    "(", round(100 * mean(lts_data$next_status == "Employed"), 2), "%)\n")
+```
+
+## Transitions by Age and Sex
+
+```{r}
+#| label: fig-transitions-age
+#| fig-cap: "Transition rates by age group and sex"
+#| fig-height: 8
+
+emp_to_lts <- analysis_data %>%
+  filter(this_status == "Employed", !is.na(age_group)) %>%
+  group_by(age_group, sex) %>%
+  summarise(
+    n = n(),
+    rate = mean(next_status == "LT Sick"),
+    se = sqrt(rate * (1 - rate) / n),
+    .groups = "drop"
+  ) %>%
+  mutate(direction = "Employed → LT Sick")
+
+lts_to_emp <- analysis_data %>%
+  filter(this_status == "LT Sick", !is.na(age_group)) %>%
+  group_by(age_group, sex) %>%
+  summarise(
+    n = n(),
+    rate = mean(next_status == "Employed"),
+    se = sqrt(rate * (1 - rate) / n),
+    .groups = "drop"
+  ) %>%
+  mutate(direction = "LT Sick → Employed")
+
+bind_rows(emp_to_lts, lts_to_emp) %>%
+  filter(n >= 30) %>%
+  ggplot(aes(x = age_group, y = rate, fill = sex)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(
+    aes(ymin = pmax(0, rate - 1.96*se), ymax = rate + 1.96*se),
+    position = position_dodge(width = 0.9), width = 0.25
+  ) +
+  facet_wrap(~direction, scales = "free_y", ncol = 1) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_brewer(palette = "Set1") +
+  labs(x = "Age Group", y = "Transition Rate (per wave)", fill = "Sex",
+       title = "Economic Status Transitions by Age and Sex",
+       caption = "Error bars show 95% CI. Groups with n < 30 excluded.") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+## Transitions by Wave/Year
+
+```{r}
+#| label: fig-transitions-wave
+#| fig-cap: "Transition rates by survey wave/year"
+
+transitions_by_wave <- analysis_data %>%
+  filter(!is.na(year)) %>%
+  group_by(wave, year, this_status) %>%
+  summarise(
+    n = n(),
+    to_employed = mean(next_status == "Employed"),
+    to_lts = mean(next_status == "LT Sick"),
+    .groups = "drop"
+  )
+
+p1 <- transitions_by_wave %>%
+  filter(this_status == "Employed") %>%
+  ggplot(aes(x = year, y = to_lts)) +
+  geom_line(linewidth = 1, color = "steelblue") +
+  geom_point(size = 2, color = "steelblue") +
+  scale_y_continuous(labels = percent_format(), limits = c(0, NA)) +
+  labs(x = "Year", y = "Transition Rate", title = "Employed → LT Sick") +
+  theme_minimal()
+
+p2 <- transitions_by_wave %>%
+  filter(this_status == "LT Sick") %>%
+  ggplot(aes(x = year, y = to_employed)) +
+  geom_line(linewidth = 1, color = "darkgreen") +
+  geom_point(size = 2, color = "darkgreen") +
+  scale_y_continuous(labels = percent_format(), limits = c(0, NA)) +
+  labs(x = "Year", y = "Transition Rate", title = "LT Sick → Employed") +
+  theme_minimal()
+
+library(patchwork)
+p1 / p2
+```
+
+## Transitions by NS-SEC Occupation Class
+
+```{r}
+#| label: fig-transitions-nssec
+#| fig-cap: "Transition rates by NS-SEC 3-class occupation"
+
+nssec_transitions <- analysis_data %>%
+  filter(!is.na(nssec3)) %>%
+  group_by(nssec3, this_status) %>%
+  summarise(
+    n = n(),
+    to_employed = mean(next_status == "Employed"),
+    to_lts = mean(next_status == "LT Sick"),
+    se_emp = sqrt(to_employed * (1 - to_employed) / n),
+    se_lts = sqrt(to_lts * (1 - to_lts) / n),
+    .groups = "drop"
+  )
+
+p1 <- nssec_transitions %>%
+  filter(this_status == "Employed", n >= 100) %>%
+  ggplot(aes(x = reorder(nssec3, to_lts), y = to_lts)) +
+  geom_col(fill = "steelblue") +
+  geom_errorbar(aes(ymin = pmax(0, to_lts - 1.96*se_lts),
+                    ymax = to_lts + 1.96*se_lts), width = 0.25) +
+  coord_flip() +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "NS-SEC Class", y = "Transition Rate", title = "Employed → LT Sick by Occupation") +
+  theme_minimal()
+
+p2 <- nssec_transitions %>%
+  filter(this_status == "LT Sick", n >= 50) %>%
+  ggplot(aes(x = reorder(nssec3, to_employed), y = to_employed)) +
+  geom_col(fill = "darkgreen") +
+  geom_errorbar(aes(ymin = pmax(0, to_employed - 1.96*se_emp),
+                    ymax = to_employed + 1.96*se_emp), width = 0.25) +
+  coord_flip() +
+  scale_y_continuous(labels = percent_format()) +
+  labs(x = "NS-SEC Class (last job)", y = "Transition Rate", title = "LT Sick → Employed by Previous Occupation") +
+  theme_minimal()
+
+p1 / p2
+```
+
+# Multinomial Logistic Regression Models
+
+::: {.callout-note}
+## Model Fitting Note
+
+Multinomial logistic regression models for these transitions require significant computation time and many iterations (typically `maxit = 1000` or more) to properly converge. Following the approach in @minton2024, models should be:
+
+1. Fitted using `nnet::multinom()` with the specification: `next_status ~ this_status * sex + splines::bs(age, 5) + health_predictors`
+2. Run with sufficient iterations for convergence
+3. Results cached for reproducibility
+
+For this preliminary report, we present the descriptive results above. Full model results can be obtained by running the models separately (e.g., in an R script) and loading the cached results.
+:::
+
+## Model Specification (For Reference)
+
+The foundational model specification from the existing papers is:
+
+```r
+nnet::multinom(
+  next_status ~ this_status * sex + splines::bs(age, 5) + sf12mcs_dv + sf12pcs_dv,
+  data = ind_data_standardised,
+  maxit = 1000  # or higher for convergence
+)
+```
+
+This models:
+
+- **Current state** (`this_status`): Captures path dependence
+- **Sex with interaction**: Different transition patterns by sex within each origin state
+- **Age (spline)**: Flexible non-linear age effects
+- **Health scores**: SF-12 mental and physical component scores (standardised)
+
+# Summary and Next Steps
+
+## Key Findings (Preliminary)
+
+1. **Employed → LT Sick transitions** are relatively rare but show clear patterns:
+   - Higher rates at older ages
+   - Associated with poorer mental and physical health
+   - Occupation class gradient visible
+
+2. **LT Sick → Employed transitions**:
+   - More common at younger ages
+   - Strongly associated with better health scores
+   - Management/professional occupations show higher return-to-work rates
+
+## Limitations
+
+- **Model convergence**: With `maxit = 100`, models may not have fully converged. Production analysis should use `maxit = 1000`.
+- **Missing NS-SEC**: Occupation data is only available for those currently/recently employed.
+- **Causal interpretation**: These are associations, not causal effects.
+
+## Questions for IFoA Discussion
+
+1. Is NS-SEC 3-class sufficient, or would 5-class be preferred?
+2. Should we also examine 2-year or longer transitions?
+3. Additional covariates: Region, education, industry sector?
+4. Comparison with administrative data?
+
+# References

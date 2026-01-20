@@ -1,0 +1,27 @@
+## Pre-specification of Analytical Decisions
+
+To minimise researcher degrees of freedom and ensure transparency, we document the following decisions made *before* analysing the data:
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Data source** | UKHLS waves 1-11 (2009-2020) | Largest UK panel study with economic status |
+| **Transition definition** | Adjacent waves only | Avoids complications of variable gap lengths |
+| **Age range** | 16-64 (working age) | Standard UK working age definition |
+| **Economic status categories** | 7-level (Level 3) | Distinguishes LT Sick from other inactive |
+| **Health measures** | SF-12 MCS/PCS (continuous) | More granular than binary measures |
+| **Occupation classification** | NS-SEC 3-class | Balance between detail and cell counts |
+| **Missing data** | Complete cases only | Avoids imputation assumptions |
+| **Model type** | Multinomial logistic regression | Standard for categorical outcomes |
+| **Model selection** | AIC/BIC comparison | Let data determine best specification |
+
+## Alternative Approaches Not Pursued
+
+The analysis could reasonably be extended in other ways:
+
+1. **Longer transition gaps** - e.g., 2-year or 5-year transitions
+2. **NS-SEC 5-class or 8-class** - more occupational detail but sparser cells
+3. **Binary health measure** - limiting long-term illness (yes/no)
+4. **Imputed missing data** - could increase sample size
+5. **Regional variation** - sub-national analysis
+
+These alternatives can be explored in subsequent analyses if considered valuable.

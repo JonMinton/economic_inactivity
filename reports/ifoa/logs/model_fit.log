@@ -1,0 +1,447 @@
+here() starts at /Users/JonMinton/repos/economic_inactivity
+Warning: program compiled against libxml 210 using older 209
+── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+✔ ggplot2 4.0.1     ✔ purrr   1.0.1
+✔ tibble  3.2.1     ✔ dplyr   1.1.1
+✔ tidyr   1.3.0     ✔ stringr 1.5.0
+✔ readr   2.1.4     ✔ forcats 1.0.0
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+Warning messages:
+1: package ‘tidyverse’ was built under R version 4.1.3 
+2: package ‘tibble’ was built under R version 4.1.3 
+3: package ‘tidyr’ was built under R version 4.1.3 
+4: package ‘readr’ was built under R version 4.1.3 
+5: package ‘purrr’ was built under R version 4.1.3 
+6: package ‘dplyr’ was built under R version 4.1.3 
+7: package ‘stringr’ was built under R version 4.1.3 
+8: package ‘forcats’ was built under R version 4.1.3 
+Warning message:
+package ‘haven’ was built under R version 4.1.3 
+Warning message:
+package ‘nnet’ was built under R version 4.1.3 
+Loading package functions...
+Extracting data from UKHLS...
+Start time: 2026-01-20 07:35:44 
+Step 1: Extracting core variables...
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/a_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.281589031219482 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.19894003868103 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/b_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.347904920578003 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.199666976928711 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/c_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.528478860855103 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.268061876296997 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/d_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.387523889541626 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.182257175445557 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/e_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.468207120895386 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.255182027816772 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/f_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.394972085952759 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.16907787322998 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/g_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.472057104110718 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.248122930526733 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/h_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.361126899719238 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.147258996963501 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/i_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.471657037734985 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.250488996505737 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/j_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.362982988357544 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.132412195205688 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/k_indresp.dta"
+[1] "Attempting to find 5 variables"
+[1] "All variables requested found"
+[1] "read file in 0.427864074707031 seconds"
+[1] "slimming file..."
+[1] "extracted 5 variables in 0.124188899993896 seconds"
+[1] "Overall process took 0.115008215109507 minutes"
+Core data extracted: 476187 observations
+Step 2: Extracting NS-SEC occupation data...
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/a_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.265095949172974 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0247478485107422 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/b_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.319317102432251 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0268759727478027 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/c_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.508550882339478 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0243639945983887 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/d_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.361108064651489 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0274908542633057 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/e_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.413189888000488 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0223071575164795 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/f_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.355772972106934 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0268938541412354 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/g_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.427910089492798 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0204808712005615 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/h_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.332356929779053 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0198469161987305 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/i_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.41399097442627 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0191738605499268 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/j_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.323125839233398 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0182020664215088 seconds"
+[1] "extracting file: /Users/JonMinton/repos/economic_inactivity/big_data/UKDA-6614-stata/stata/stata13_se/ukhls/k_indresp.dta"
+[1] "Attempting to find 1 variables"
+[1] "All variables requested found"
+[1] "read file in 0.387593984603882 seconds"
+[1] "slimming file..."
+[1] "extracted 1 variables in 0.0170469284057617 seconds"
+[1] "Overall process took 0.0728579839070638 minutes"
+NS-SEC data extracted: 476187 observations
+Combined data: 476187 observations
+Cleaning data...
+After core filtering: 305327 observations
+With health data: 269786 observations
+With health + occupation: 190465 observations
+Cleaned datasets saved.
+
+Fitting model: mod_01_foundation 
+  Formula: next_status ~ this_status * sex + bs(age, 5) 
+  N = 305327 
+  Start: 07:36:04 
+# weights:  238 (198 variable)
+initial  value 594138.908082 
+iter  10 value 217127.939166
+iter  20 value 182184.525315
+iter  30 value 176212.000002
+iter  40 value 169367.085023
+iter  50 value 164572.459962
+iter  60 value 158585.908795
+iter  70 value 155470.271930
+iter  80 value 153575.462493
+iter  90 value 151131.224666
+iter 100 value 147148.756144
+iter 110 value 145054.791348
+iter 120 value 144569.172614
+iter 130 value 144455.185592
+iter 140 value 144450.401107
+iter 150 value 144447.679212
+iter 160 value 144447.313746
+final  value 144447.284088 
+converged
+  Finished: 07:36:58 
+  Duration: 0.9 minutes
+  Converged: TRUE 
+  AIC: 289146.6 
+  BIC: 290485.8 
+
+Fitting model: mod_02_foundation_year 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + wave_num 
+  N = 305327 
+  Start: 07:36:59 
+# weights:  245 (204 variable)
+initial  value 594138.908082 
+iter  10 value 188860.423696
+iter  20 value 170494.485276
+iter  30 value 168909.928376
+iter  40 value 160656.700346
+iter  50 value 154076.402989
+iter  60 value 152162.793933
+iter  70 value 147692.809195
+iter  80 value 146403.709457
+iter  90 value 145535.593512
+iter 100 value 144942.501943
+iter 110 value 144609.601223
+iter 120 value 144447.193284
+iter 130 value 144337.167451
+iter 140 value 144292.792235
+iter 150 value 144292.169753
+final  value 144292.099683 
+converged
+  Finished: 07:37:55 
+  Duration: 0.9 minutes
+  Converged: TRUE 
+  AIC: 288848.2 
+  BIC: 290251.2 
+
+Fitting model: mod_03_health 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + sf12mcs_std +      sf12pcs_std 
+  N = 269786 
+  Start: 07:37:56 
+# weights:  252 (210 variable)
+initial  value 524979.315476 
+iter  10 value 277898.042811
+iter  20 value 238689.549816
+iter  30 value 213193.380782
+iter  40 value 186775.099923
+iter  50 value 164286.259837
+iter  60 value 148294.523108
+iter  70 value 139309.455587
+iter  80 value 132536.579699
+iter  90 value 129930.865784
+iter 100 value 126791.469732
+iter 110 value 124873.774311
+iter 120 value 124493.263506
+iter 130 value 123926.724618
+iter 140 value 122932.271533
+iter 150 value 122663.631556
+iter 160 value 121827.642732
+iter 170 value 121706.380751
+iter 180 value 121630.393305
+final  value 121625.776495 
+converged
+  Finished: 07:38:53 
+  Duration: 0.9 minutes
+  Converged: TRUE 
+  AIC: 243527.6 
+  BIC: 244977.3 
+
+Fitting model: mod_04_health_year 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + sf12mcs_std +      sf12pcs_std + wave_num 
+  N = 269786 
+  Start: 07:38:54 
+# weights:  259 (216 variable)
+initial  value 524979.315476 
+iter  10 value 186694.578037
+iter  20 value 161461.599079
+iter  30 value 154047.057774
+iter  40 value 150639.318369
+iter  50 value 143580.652565
+iter  60 value 135703.306813
+iter  70 value 133973.961996
+iter  80 value 128402.301659
+iter  90 value 125774.801479
+iter 100 value 123966.793375
+iter 110 value 122712.994084
+iter 120 value 121840.844702
+iter 130 value 121673.291296
+iter 140 value 121580.325181
+iter 150 value 121487.020652
+iter 160 value 121470.089349
+iter 170 value 121467.933061
+iter 180 value 121467.549612
+iter 190 value 121467.439774
+final  value 121467.434678 
+converged
+  Finished: 07:39:57 
+  Duration: 1.1 minutes
+  Converged: TRUE 
+  AIC: 243222.9 
+  BIC: 244735.6 
+
+Fitting model: mod_05_health_nssec 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + sf12mcs_std +      sf12pcs_std + nssec3 
+  N = 190465 
+  Start: 07:39:58 
+# weights:  266 (222 variable)
+initial  value 370627.776541 
+iter  10 value 111783.682264
+iter  20 value 102772.490499
+iter  30 value 87116.190592
+iter  40 value 76089.415667
+iter  50 value 65245.797644
+iter  60 value 58332.862489
+iter  70 value 54405.740798
+iter  80 value 53196.990437
+iter  90 value 52795.254199
+iter 100 value 52438.192134
+iter 110 value 52390.737580
+iter 120 value 52357.269026
+iter 130 value 52022.396340
+iter 140 value 51977.105763
+iter 150 value 51976.079548
+iter 160 value 51975.936345
+iter 170 value 51973.321351
+final  value 51973.153785 
+converged
+  Finished: 07:40:34 
+  Duration: 0.6 minutes
+  Converged: TRUE 
+  AIC: 104246.3 
+  BIC: 105769.9 
+
+Fitting model: mod_06_health_nssec_year 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + sf12mcs_std +      sf12pcs_std + nssec3 + wave_num 
+  N = 190465 
+  Start: 07:40:35 
+# weights:  273 (228 variable)
+initial  value 370627.776541 
+iter  10 value 85649.099635
+iter  20 value 75254.908905
+iter  30 value 72770.302457
+iter  40 value 67396.834183
+iter  50 value 62678.347720
+iter  60 value 60277.659379
+iter  70 value 58144.165300
+iter  80 value 56368.430114
+iter  90 value 54817.898389
+iter 100 value 53531.436106
+iter 110 value 52298.227567
+iter 120 value 52202.236396
+iter 130 value 52009.959411
+iter 140 value 51859.678198
+iter 150 value 51850.612161
+iter 160 value 51848.579391
+iter 170 value 51848.307147
+iter 180 value 51848.138607
+final  value 51847.841310 
+converged
+  Finished: 07:41:15 
+  Duration: 0.7 minutes
+  Converged: TRUE 
+  AIC: 104007.7 
+  BIC: 105592.2 
+
+Fitting model: mod_07_health_nssec_interact 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + (sf12mcs_std +      sf12pcs_std) * nssec3 
+  N = 190465 
+  Start: 07:41:15 
+# weights:  294 (246 variable)
+initial  value 370627.776541 
+iter  10 value 101720.286367
+iter  20 value 92999.447092
+iter  30 value 80675.547517
+iter  40 value 68964.447422
+iter  50 value 63184.498441
+iter  60 value 58858.391731
+iter  70 value 56029.755832
+iter  80 value 54557.154088
+iter  90 value 53770.871095
+iter 100 value 53431.032248
+iter 110 value 52693.481490
+iter 120 value 52454.861812
+iter 130 value 52411.801320
+iter 140 value 52395.330220
+iter 150 value 52335.264622
+iter 160 value 51993.091969
+iter 170 value 51962.670360
+iter 180 value 51962.565219
+iter 190 value 51959.398469
+final  value 51959.385243 
+converged
+  Finished: 07:42:01 
+  Duration: 0.8 minutes
+  Converged: TRUE 
+  AIC: 104266.8 
+  BIC: 106034.1 
+
+Fitting model: mod_08_full 
+  Formula: next_status ~ this_status * sex + bs(age, 5) + (sf12mcs_std +      sf12pcs_std) * nssec3 + wave_num 
+  N = 190465 
+  Start: 07:42:01 
+# weights:  301 (252 variable)
+initial  value 370627.776541 
+iter  10 value 89461.673394
+iter  20 value 78853.760159
+iter  30 value 75961.940253
+iter  40 value 69289.206756
+iter  50 value 65243.129949
+iter  60 value 62410.596419
+iter  70 value 59953.669630
+iter  80 value 58924.718480
+iter  90 value 57785.634274
+iter 100 value 55667.139596
+iter 110 value 54185.633108
+iter 120 value 53166.353464
+iter 130 value 52295.463312
+iter 140 value 52195.353221
+iter 150 value 52018.374486
+iter 160 value 51851.555956
+iter 170 value 51839.142448
+iter 180 value 51834.962958
+iter 190 value 51834.667083
+iter 200 value 51834.536049
+final  value 51834.230120 
+converged
+  Finished: 07:42:52 
+  Duration: 0.8 minutes
+  Converged: TRUE 
+  AIC: 104028.5 
+  BIC: 105856.8 
+
+
+====================================================================== 
+MODEL COMPARISON SUMMARY
+====================================================================== 
+
+# A tibble: 8 × 6
+  name                              n converged     aic     bic duration_mins
+  <chr>                         <int> <lgl>       <dbl>   <dbl>         <dbl>
+1 mod_06_health_nssec_year     190465 TRUE      104008. 105592.         0.669
+2 mod_05_health_nssec          190465 TRUE      104246. 105770.         0.591
+3 mod_08_full                  190465 TRUE      104028. 105857.         0.840
+4 mod_07_health_nssec_interact 190465 TRUE      104267. 106034.         0.755
+5 mod_04_health_year           269786 TRUE      243223. 244736.         1.06 
+6 mod_03_health                269786 TRUE      243528. 244977.         0.945
+7 mod_02_foundation_year       305327 TRUE      288848. 290251.         0.946
+8 mod_01_foundation            305327 TRUE      289147. 290486.         0.900
+
+Best model by BIC: mod_06_health_nssec_year 
+Best model by AIC: mod_06_health_nssec_year 
+
+All models saved to: reports/ifoa/models/
+Finished: 2026-01-20 07:42:53 

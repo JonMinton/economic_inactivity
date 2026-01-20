@@ -1,0 +1,498 @@
+---
+title: "Economic Status Transitions: Employed ↔ Long-term Sick"
+subtitle: "IFoA Collaboration: Model Results and Counterfactual Analysis"
+author:
+  - "Jon Minton"
+date: today
+format:
+  html:
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show R code"
+    number-sections: true
+    fig-width: 8
+    fig-height: 6
+    embed-resources: true
+  pdf:
+    toc: true
+    number-sections: true
+  docx:
+    toc: true
+    number-sections: true
+bibliography: references.bib
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(here)
+library(tidyverse)
+library(nnet)
+library(knitr)
+library(kableExtra)
+library(scales)
+library(patchwork)
+library(splines)
+
+# Source package functions
+r_files <- list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE)
+for (f in r_files) source(f)
+load(here::here("data", "econActGroups.rda"))
+
+# Pre-compute PAF for executive summary
+# (Full analysis details shown later in document)
+best_model <- readRDS(here::here("reports/ifoa/models/mod_06_health_nssec_year.rds"))
+data_full <- readRDS(here::here("reports/ifoa/models/data_full.rds"))
+
+# Define ordinal NS-SEC levels (routine/manual → intermediate → management/professional)
+nssec_levels <- c("Routine & Manual", "Intermediate", "Management & Professional")
+
+# Get NS-SEC distribution from employed 45-55 year olds
+nssec_dist <- data_full |>
+  filter(this_status == "Employed", between(age, 45, 55)) |>
+  mutate(nssec3 = factor(nssec3, levels = nssec_levels)) |>
+  count(sex, nssec3) |>
+  group_by(sex) |>
+  mutate(prop = n / sum(n)) |>
+  ungroup()
+
+# Simulation function
+simulate_transitions <- function(model, n_per_sex = 10000, age = 50,
+                                  nssec_distribution, wave = 11,
+                                  counterfactual_nssec = NULL) {
+  results <- list()
+  for (s in c("male", "female")) {
+    sex_dist <- nssec_distribution |> filter(sex == s)
+    if (is.null(counterfactual_nssec)) {
+      n_by_nssec <- round(sex_dist$prop * n_per_sex)
+      n_by_nssec[1] <- n_by_nssec[1] + (n_per_sex - sum(n_by_nssec))
+      cohort <- tibble(sex = s, nssec3 = rep(sex_dist$nssec3, times = n_by_nssec))
+    } else {
+      cohort <- tibble(sex = s, nssec3 = rep(counterfactual_nssec, n_per_sex))
+    }
+    cohort <- cohort |>
+      mutate(this_status = "Employed", age = age, sf12mcs_std = 0, sf12pcs_std = 0, wave_num = wave)
+    preds <- predict(model, newdata = cohort, type = "probs")
+    cohort$prob_ltsick <- preds[, "Inactive long term sick"]
+    results[[s]] <- cohort |>
+      summarise(sex = first(sex), n = n(), expected_ltsick = sum(prob_ltsick), mean_prob = mean(prob_ltsick))
+  }
+  bind_rows(results)
+}
+
+baseline <- simulate_transitions(best_model, 10000, 50, nssec_dist, 11)
+counterfactual <- simulate_transitions(best_model, 10000, 50, nssec_dist, 11, "Management & Professional")
+
+paf_results <- baseline |>
+  rename(baseline_expected = expected_ltsick, baseline_prob = mean_prob) |>
+  left_join(
+    counterfactual |>
+      rename(counter_expected = expected_ltsick, counter_prob = mean_prob) |>
+      select(sex, counter_expected, counter_prob),
+    by = "sex"
+  ) |>
+  mutate(
+    diff_absolute = baseline_expected - counter_expected,
+    diff_relative_pct = (baseline_expected - counter_expected) / baseline_expected * 100,
+    paf = diff_relative_pct
+  )
+
+paf_overall <- round(mean(paf_results$paf), 0)
+```
+
+# Executive Summary
+
+This report presents multinomial logistic regression models for economic status transitions, focusing on movements between **Employed** and **Long-term Sick** states. Rising economic inactivity due to long-term sickness has become a significant policy concern in the UK [@tinson2022]. Using data from the UK Household Longitudinal Study (UKHLS) waves 1-11 (2009-2020) [@platt2021], we estimate the role of health (SF-12 mental and physical component scores [@ware1996]) and occupation class (NS-SEC 3-class [@nssec]) in explaining these transitions.
+
+**Key findings:**
+
+1. **Model selection**: The best-fitting model (by BIC) includes health scores, occupation class, and a year trend, without interaction terms
+2. **Health effects**: Both mental and physical health strongly predict transitions - poorer health increases risk of becoming long-term sick
+3. **Occupation gradient**: Routine/manual occupations have higher Employed → LT Sick transition rates than management/professional occupations
+4. **Population Attributable Fraction**: Approximately `r paf_overall`% of Employed → LT Sick transitions among 50-year-olds can be attributed to occupational class inequalities
+
+# Analytical Framework
+
+{{< include _analytical_decisions.qmd >}}
+
+# Data Description
+
+```{r}
+#| label: data-description
+
+# Sample sizes by dataset
+data_core <- readRDS(here::here("reports/ifoa/models/data_core.rds"))
+data_health <- readRDS(here::here("reports/ifoa/models/data_health.rds"))
+
+tibble(
+  Dataset = c("Core (demography only)", "With health scores", "With health + occupation"),
+  `N observations` = c(nrow(data_core), nrow(data_health), nrow(data_full)),
+  `N individuals` = c(n_distinct(data_core$pidp), n_distinct(data_health$pidp), n_distinct(data_full$pidp))
+) |>
+  mutate(across(where(is.numeric), ~comma(.))) |>
+  kable(caption = "Sample sizes by model dataset") |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Economic Status Distribution
+
+The seven-level economic status categorisation distinguishes between types of economic inactivity:
+
+```{r}
+#| label: status-distribution
+
+data_full |>
+  count(this_status, name = "N") |>
+  mutate(Percent = percent(N / sum(N), accuracy = 0.1)) |>
+  arrange(desc(N)) |>
+  kable(col.names = c("Current Economic Status", "N", "Percent"),
+        caption = "Distribution of current economic status in analysis sample") |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Transition Matrix
+
+```{r}
+#| label: transition-matrix
+
+data_full |>
+  count(this_status, next_status) |>
+  group_by(this_status) |>
+  mutate(pct = round(100 * n / sum(n), 1)) |>
+  ungroup() |>
+  select(-n) |>
+  pivot_wider(names_from = next_status, values_from = pct, values_fill = 0) |>
+  kable(caption = "Transition matrix: row percentages (current → next wave status)") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), font_size = 11) |>
+  scroll_box(width = "100%")
+```
+
+# Model Comparison
+
+Eight candidate model specifications were fitted and compared using AIC and BIC criteria. Models were fit separately in a script (`_fit_models.R`) and saved for reproducibility.
+
+```{r}
+#| label: load-models
+
+# Load model comparison results (best_model and data_full already loaded in setup)
+model_comparison <- readRDS(here::here("reports/ifoa/models/model_comparison.rds"))
+```
+
+## Model Specifications Tested
+
+| Model | Formula | N | Description |
+|-------|---------|---|-------------|
+| 1 | `next_status ~ this_status * sex + bs(age, 5)` | 305,327 | Foundation (demography only) |
+| 2 | + `wave_num` | 305,327 | + Year trend |
+| 3 | + `sf12mcs_std + sf12pcs_std` | 269,786 | + Health scores |
+| 4 | + health + `wave_num` | 269,786 | + Health + year |
+| 5 | + health + `nssec3` | 190,465 | + Health + occupation |
+| 6 | + health + occupation + `wave_num` | 190,465 | + Health + occupation + year |
+| 7 | + health × occupation | 190,465 | + Interaction terms |
+| 8 | Full (all interactions + year) | 190,465 | Most complex |
+
+## AIC/BIC Comparison
+
+```{r}
+#| label: model-comparison-table
+
+model_comparison |>
+  select(name, n, converged, aic, bic) |>
+  mutate(
+    name = str_remove(name, "mod_0") |> str_replace("_", ": "),
+    aic = comma(round(aic, 0)),
+    bic = comma(round(bic, 0)),
+    n = comma(n)
+  ) |>
+  arrange(bic) |>
+  kable(
+    col.names = c("Model", "N", "Converged", "AIC", "BIC"),
+    caption = "Model comparison ranked by BIC (lower is better)"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover")) |>
+  row_spec(1, bold = TRUE, background = "#e6f3ff")
+```
+
+**Model selection decision**: Model 6 (`mod_06_health_nssec_year`) is selected as it has the lowest BIC. This model includes:
+
+- Current economic status (`this_status`) with sex interaction
+- Age (B-spline with 5 degrees of freedom)
+- Standardised SF-12 mental and physical component scores
+- NS-SEC 3-class occupation
+- Year trend
+
+The interaction models (7 and 8) did not improve BIC despite their additional complexity, indicating that the effect of health on transitions does not differ meaningfully by occupation class.
+
+# Transition Probabilities by NS-SEC
+
+Using the selected model, we estimate transition probabilities for individuals with specific characteristics.
+
+## Employed → Long-term Sick Transitions
+
+We focus on the transition of interest: movement from Employed to Long-term Sick status. We examine how this varies by occupation class, holding other factors constant.
+
+```{r}
+#| label: emp-to-ltsick-by-nssec
+
+# Create prediction grid for Employed individuals aged 50
+pred_grid_emp <- expand_grid(
+  this_status = "Employed",
+  sex = c("male", "female"),
+  age = 50,
+  sf12mcs_std = 0,  # Average mental health
+  sf12pcs_std = 0,  # Average physical health
+  nssec3 = nssec_levels,  # Use ordinal ordering
+  wave_num = 11     # Latest wave (2019-2020)
+)
+
+# Get predictions
+pred_emp <- predict(best_model, newdata = pred_grid_emp, type = "probs")
+
+# Combine with grid and apply factor ordering
+pred_emp_df <- bind_cols(pred_grid_emp, as_tibble(pred_emp)) |>
+  select(sex, nssec3, `Inactive long term sick`) |>
+  rename(prob_ltsick = `Inactive long term sick`) |>
+  mutate(nssec3 = factor(nssec3, levels = nssec_levels))
+
+# Display table
+pred_emp_df |>
+  mutate(
+    prob_ltsick_pct = percent(prob_ltsick, accuracy = 0.01),
+    prob_ltsick_per_10k = comma(prob_ltsick * 10000, accuracy = 1)
+  ) |>
+  select(sex, nssec3, prob_ltsick_pct, prob_ltsick_per_10k) |>
+  kable(
+    col.names = c("Sex", "NS-SEC Class", "Probability", "Per 10,000"),
+    caption = "Predicted Employed → LT Sick transition probability (age 50, average health, wave 11)"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+```{r}
+#| label: plot-emp-to-ltsick
+#| fig-cap: "Predicted probability of Employed → LT Sick transition by occupation class (age 50, average health)"
+
+pred_emp_df |>
+  ggplot(aes(x = nssec3, y = prob_ltsick, fill = sex)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = percent_format(accuracy = 0.1)) +
+  scale_fill_brewer(palette = "Set1", name = "Sex") +
+  labs(
+    x = "NS-SEC Occupation Class",
+    y = "Probability of Transition to LT Sick",
+    title = "Employed → Long-term Sick Transitions",
+    subtitle = "Predicted for age 50, average health scores, wave 11 (2019-20)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+```
+
+# Counterfactual Analysis: Population Attributable Fraction
+
+## Analytical Approach
+
+To quantify the contribution of occupational class to Employed → LT Sick transitions, we conduct a counterfactual simulation:
+
+1. **Baseline scenario**: 10,000 males aged 50 and 10,000 females aged 50, all currently Employed, distributed across NS-SEC classes proportionally to the observed sample
+2. **Counterfactual scenario**: Same population, but everyone assigned to "Management & Professional" (the class with lowest LT Sick transition risk)
+3. **PAF calculation**: (Baseline transitions - Counterfactual transitions) / Baseline transitions
+
+```{r}
+#| label: nssec-distribution
+
+# Display NS-SEC distribution (computed in setup)
+nssec_dist |>
+  mutate(prop_pct = percent(prop, accuracy = 0.1)) |>
+  select(sex, nssec3, n, prop_pct) |>
+  kable(
+    col.names = c("Sex", "NS-SEC Class", "N", "Proportion"),
+    caption = "NS-SEC distribution among employed individuals aged 45-55"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## Results: Occupation-Attributable Transitions
+
+```{r}
+#| label: paf-table
+
+paf_results |>
+  mutate(
+    baseline_expected = round(baseline_expected, 1),
+    counter_expected = round(counter_expected, 1),
+    diff_absolute = round(diff_absolute, 1),
+    paf = paste0(round(paf, 1), "%")
+  ) |>
+  select(sex, n, baseline_expected, counter_expected, diff_absolute, paf) |>
+  kable(
+    col.names = c("Sex", "N", "Baseline Expected", "Counterfactual Expected",
+                  "Difference", "PAF"),
+    caption = "Population Attributable Fraction for Employed → LT Sick transitions due to occupational class inequality"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+```{r}
+#| label: plot-paf
+#| fig-cap: "Expected Employed → LT Sick transitions under baseline and counterfactual scenarios"
+
+paf_plot_data <- paf_results |>
+  select(sex, baseline_expected, counter_expected) |>
+  pivot_longer(
+    cols = c(baseline_expected, counter_expected),
+    names_to = "scenario",
+    values_to = "expected_transitions"
+  ) |>
+  mutate(
+    scenario = case_when(
+      scenario == "baseline_expected" ~ "Baseline\n(observed NS-SEC distribution)",
+      scenario == "counter_expected" ~ "Counterfactual\n(all Management & Professional)"
+    )
+  )
+
+ggplot(paf_plot_data, aes(x = scenario, y = expected_transitions, fill = sex)) +
+  geom_col(position = "dodge") +
+  geom_text(aes(label = round(expected_transitions, 0)),
+            position = position_dodge(width = 0.9), vjust = -0.5) +
+  scale_fill_brewer(palette = "Set1", name = "Sex") +
+  labs(
+    x = "",
+    y = "Expected Transitions to LT Sick (per 10,000)",
+    title = "Effect of Equalising Occupational Class",
+    subtitle = "Among 10,000 employed individuals aged 50"
+  ) +
+  theme_minimal()
+```
+
+## Interpretation
+
+Among a hypothetical cohort of 10,000 employed 50-year-olds with average health:
+
+- **Baseline**: With the observed distribution of occupational classes, we expect approximately `r round(paf_results$baseline_expected[paf_results$sex == "male"], 0)` males and `r round(paf_results$baseline_expected[paf_results$sex == "female"], 0)` females to transition to long-term sickness over the following year.
+
+- **Counterfactual**: If everyone had the transition risk of Management & Professional occupations, we would expect approximately `r round(paf_results$counter_expected[paf_results$sex == "male"], 0)` males and `r round(paf_results$counter_expected[paf_results$sex == "female"], 0)` females to make this transition.
+
+- **PAF**: Approximately `r round(mean(paf_results$paf), 0)`% of Employed → LT Sick transitions among 50-year-olds can be attributed to occupational class inequality.
+
+This suggests that if all workers had the same low transition risk as those in management and professional occupations, we could expect roughly `r round(mean(paf_results$paf), 0)`% fewer transitions from employment to long-term sickness in this age group.
+
+# Time Trends
+
+The model includes a year trend (`wave_num`). This captures systematic changes in transition probabilities over the 2009-2020 period.
+
+```{r}
+#| label: time-trend
+#| fig-cap: "Predicted Employed → LT Sick probability over time (age 50, average health, Routine & Manual)"
+
+# Predictions across waves
+time_grid <- expand_grid(
+  this_status = "Employed",
+  sex = c("male", "female"),
+  age = 50,
+  sf12mcs_std = 0,
+  sf12pcs_std = 0,
+  nssec3 = "Routine & Manual",
+  wave_num = 1:11
+)
+
+time_preds <- predict(best_model, newdata = time_grid, type = "probs")
+time_df <- bind_cols(time_grid, as_tibble(time_preds)) |>
+  mutate(
+    year = 2008 + wave_num,
+    prob_ltsick = `Inactive long term sick`
+  )
+
+ggplot(time_df, aes(x = year, y = prob_ltsick, colour = sex)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = percent_format(accuracy = 0.1)) +
+  scale_colour_brewer(palette = "Set1", name = "Sex") +
+  scale_x_continuous(breaks = seq(2009, 2019, 2)) +
+  labs(
+    x = "Year",
+    y = "Probability of Transition to LT Sick",
+    title = "Time Trend in Employed → LT Sick Transitions",
+    subtitle = "Routine & Manual occupations, age 50, average health"
+  ) +
+  theme_minimal()
+```
+
+# Discussion
+
+## Key Findings
+
+1. **Health is the strongest predictor**: Both mental and physical health scores substantially improve model fit (AIC drops from ~289k to ~244k when health is added).
+
+2. **Occupation class matters**: Adding NS-SEC occupation further improves fit. Those in routine/manual occupations have higher risk of transitioning from employment to long-term sickness.
+
+3. **No evidence for interaction effects**: The relationship between health and transitions does not differ significantly by occupation class (interaction models did not improve BIC).
+
+4. **Year trend is significant**: Transition probabilities have changed systematically over 2009-2020, though the magnitude is modest.
+
+5. **PAF for occupation**: Approximately `r round(mean(paf_results$paf), 0)`% of Employed → LT Sick transitions among 50-year-olds can be attributed to occupational class inequalities.
+
+## Limitations
+
+- **Pre-pandemic data**: Analysis uses waves 1-11 (2009-2020). Post-pandemic patterns may differ.
+- **Complete cases**: Individuals missing health or occupation data are excluded, reducing sample size.
+- **Causal interpretation**: These are associations controlling for observed confounders; unobserved confounding may remain.
+- **NS-SEC measurement**: Based on current/recent job; may not capture full occupational history.
+
+## Implications for Actuarial Analysis
+
+1. **Risk stratification**: Occupation class provides meaningful stratification of transition risk beyond health status alone.
+
+2. **Projection scenarios**: The model can be used to project future LT Sick populations under different assumptions about health trajectories or occupational composition.
+
+3. **Intervention targeting**: The PAF analysis suggests that reducing occupational class gradients in transition risk could meaningfully reduce the flow into long-term sickness.
+
+# Technical Appendix
+
+## Model Coefficients
+
+```{r}
+#| label: model-coefficients
+
+# Extract and display coefficients for key transitions
+coefs <- coef(best_model)
+
+# Focus on Employed → LT Sick (relative to staying Employed)
+if ("Inactive long term sick" %in% rownames(coefs)) {
+  ltsick_coefs <- coefs["Inactive long term sick", ]
+
+  # Select key coefficients
+  key_coefs <- ltsick_coefs[c(
+    "(Intercept)",
+    "this_statusEmployed:sexmale",
+    "sf12mcs_std",
+    "sf12pcs_std",
+    "nssec3Intermediate",
+    "nssec3Routine & Manual",
+    "wave_num"
+  )]
+
+  tibble(
+    Coefficient = names(key_coefs),
+    Estimate = round(key_coefs, 3),
+    `Odds Ratio` = round(exp(key_coefs), 3)
+  ) |>
+    kable(caption = "Selected coefficients for Employed → LT Sick transition (reference: Employed, female, Management & Professional)") |>
+    kable_styling(bootstrap_options = c("striped", "hover"))
+}
+```
+
+## Session Information
+
+```{r}
+#| label: session-info
+sessionInfo()
+```
+
+# References
