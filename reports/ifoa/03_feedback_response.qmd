@@ -1,0 +1,708 @@
+---
+title: "Transition Rate Tables and Two-Cycle Pathway Analysis"
+subtitle: "IFoA Collaboration: Response to DRB Feedback"
+author:
+  - "Jon Minton (Public Health Scotland)"
+date: today
+format:
+  html:
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show R code"
+    number-sections: true
+    fig-width: 8
+    fig-height: 6
+    embed-resources: true
+  pdf:
+    toc: true
+    number-sections: true
+  docx:
+    toc: true
+    number-sections: true
+bibliography: references.bib
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(here)
+library(tidyverse)
+library(nnet)
+library(knitr)
+library(kableExtra)
+library(scales)
+library(patchwork)
+library(splines)
+
+# Source package functions
+r_files <- list.files(here::here("R"), pattern = "\\.R$", full.names = TRUE)
+for (f in r_files) source(f)
+load(here::here("data", "econActGroups.rda"))
+
+# Load pre-fitted best model and data
+best_model <- readRDS(here::here("reports/ifoa/models/mod_06_health_nssec_year.rds"))
+data_full <- readRDS(here::here("reports/ifoa/models/data_full.rds"))
+
+# Ordered NS-SEC levels
+nssec_levels <- c("Routine & Manual", "Intermediate", "Management & Professional")
+
+# All 7 economic status levels used in the model
+all_statuses <- c("Employed", "Unemployed", "Inactive long term sick",
+                  "Inactive student", "Inactive care",
+                  "Inactive retired", "Inactive other")
+
+# Short labels for display
+status_short <- c(
+  "Employed" = "Employed",
+  "Unemployed" = "Unemployed",
+  "Inactive long term sick" = "LT Sick",
+  "Inactive student" = "Student",
+  "Inactive care" = "Carer",
+  "Inactive retired" = "Retired",
+  "Inactive other" = "Other"
+)
+```
+
+```{r}
+#| label: helper-functions
+#| include: false
+
+# Build a prediction grid for a given origin status across all ages, sexes, and NS-SEC classes
+build_pred_grid <- function(origin_status, mcs_val = 0, pcs_val = 0, wave_val = 6) {
+  expand_grid(
+    this_status = origin_status,
+    sex = c("male", "female"),
+    age = 16:64,
+    sf12mcs_std = mcs_val,
+    sf12pcs_std = pcs_val,
+    nssec3 = nssec_levels,
+    wave_num = wave_val
+  )
+}
+
+# Predict transition probabilities and format as a wide table (rows=age, cols=sex x NS-SEC)
+get_transition_table <- function(model, origin_status, target_col,
+                                  mcs_val = 0, pcs_val = 0, wave_val = 6,
+                                  per = 10000) {
+  grid <- build_pred_grid(origin_status, mcs_val, pcs_val, wave_val)
+  preds <- predict(model, newdata = grid, type = "probs")
+  grid$prob <- preds[, target_col]
+
+  grid |>
+    mutate(
+      rate_per = prob * per,
+      col_label = paste(sex, nssec3, sep = " / ")
+    ) |>
+    select(age, col_label, rate_per) |>
+    pivot_wider(names_from = col_label, values_from = rate_per)
+}
+
+# Format and display a transition table with kableExtra
+display_transition_table <- function(tbl, caption, per = 10000, digits = 1) {
+  tbl |>
+    mutate(across(-age, ~ round(., digits))) |>
+    kable(
+      caption = caption,
+      col.names = c("Age", names(tbl)[-1])
+    ) |>
+    kable_styling(
+      bootstrap_options = c("striped", "hover", "condensed"),
+      font_size = 11,
+      full_width = FALSE
+    ) |>
+    add_header_above(c(" " = 1, "Male" = 3, "Female" = 3)) |>
+    scroll_box(height = "400px")
+}
+
+# Calculate two-cycle pathway probabilities
+calculate_two_cycle_pathways <- function(model, sex_val, age_val, nssec_val,
+                                          mcs_val = 0, pcs_val = 0, wave_val = 10) {
+  # Step 1: Predict transition from Employed at wave T
+  step1_data <- tibble(
+    this_status = "Employed",
+    sex = sex_val,
+    age = age_val,
+    sf12mcs_std = mcs_val,
+    sf12pcs_std = pcs_val,
+    nssec3 = nssec_val,
+    wave_num = wave_val
+  )
+  step1_probs <- predict(model, newdata = step1_data, type = "probs")
+  # Single-row predict returns a named vector; ensure it's a matrix
+  if (is.null(dim(step1_probs))) step1_probs <- matrix(step1_probs, nrow = 1, dimnames = list(NULL, names(step1_probs)))
+
+  # Step 2: For each intermediate state, predict transition to LT Sick at wave T+1
+  step2_data <- tibble(
+    this_status = all_statuses,
+    sex = sex_val,
+    age = age_val + 1,
+    sf12mcs_std = mcs_val,
+    sf12pcs_std = pcs_val,
+    nssec3 = nssec_val,
+    wave_num = min(wave_val + 1, 11)
+  )
+  step2_probs <- predict(model, newdata = step2_data, type = "probs")
+
+  # Extract pathway probabilities
+  p_emp_to_x <- as.numeric(step1_probs[1, ])
+  p_x_to_ltsick <- step2_probs[, "Inactive long term sick"]
+  p_two_cycle <- p_emp_to_x * p_x_to_ltsick
+  total <- sum(p_two_cycle)
+
+ tibble(
+    intermediate_state = all_statuses,
+    intermediate_short = status_short[all_statuses],
+    p_emp_to_x = p_emp_to_x,
+    p_x_to_ltsick = p_x_to_ltsick,
+    p_two_cycle = p_two_cycle,
+    pct_of_total = ifelse(total > 0, p_two_cycle / total * 100, 0)
+  ) |>
+    arrange(desc(p_two_cycle))
+}
+```
+
+# Introduction
+
+This report responds to feedback from DRB on [Report 02](02_model_results.html) and extends the analysis with a two-cycle pathway decomposition. It uses the pre-fitted best model (Model 6: health + occupation + year trend) selected in Report 02, applied to data from the UK Household Longitudinal Study [@platt2021] waves 1--11 (2009--2020). Transition probabilities are estimated from a multinomial logistic regression model [@minton2024] that includes SF-12 health scores [@ware1996] and NS-SEC 3-class occupation [@nssec].
+
+**Three deliverables:**
+
+1. **Full transition rate tables** for Employed to Long-term Sick by age (16--64), sex, and NS-SEC occupation class -- at two health levels
+2. **Mirror tables** for Long-term Sick to Employed return-to-work transitions
+3. **Two-cycle pathway analysis** showing how individuals reach Long-term Sick status over two survey waves via intermediate economic states
+
+::: {.callout-note}
+## Interpreting as Annual Transition Rates
+
+UKHLS interviews are conducted approximately annually, with most respondents interviewed roughly 12 months after their previous wave [@ukhls_user_guide]. The transition probabilities presented here therefore approximate **annual transition rates**. However, exact inter-wave intervals vary by respondent, so these should be interpreted as approximate rather than exact annual rates.
+:::
+
+# Employed to Long-term Sick Transition Rates {#sec-emp-to-ltsick}
+
+We generate predicted transition probabilities from the selected model for all combinations of age (16--64), sex, and NS-SEC 3-class occupation. Rates are presented per 10,000 to improve readability, as the underlying probabilities are small (typically below 1%).
+
+All predictions hold health scores at specified levels and use the model's age spline, sex interaction, and year trend.
+
+## Average Health, Period Average (Wave 6) {#sec-emp-avg-period}
+
+```{r}
+#| label: emp-to-ltsick-table-avg-period
+
+tbl_emp_avg_period <- get_transition_table(
+  best_model, "Employed", "Inactive long term sick",
+  mcs_val = 0, pcs_val = 0, wave_val = 6
+)
+
+display_transition_table(
+  tbl_emp_avg_period,
+  "Employed \u2192 LT Sick: rates per 10,000 (average health, period average)"
+)
+```
+
+## Average Health, Latest Wave (Wave 11, 2019--20) {#sec-emp-avg-latest}
+
+```{r}
+#| label: emp-to-ltsick-table-avg-latest
+
+tbl_emp_avg_latest <- get_transition_table(
+  best_model, "Employed", "Inactive long term sick",
+  mcs_val = 0, pcs_val = 0, wave_val = 11
+)
+
+display_transition_table(
+  tbl_emp_avg_latest,
+  "Employed \u2192 LT Sick: rates per 10,000 (average health, wave 11)"
+)
+```
+
+## 1 SD Below Average Health, Period Average (Wave 6) {#sec-emp-poor-period}
+
+These tables show transition rates for individuals with both mental and physical health scores 1 standard deviation below the population mean, representing poorer-than-average health.
+
+```{r}
+#| label: emp-to-ltsick-table-poor-period
+
+tbl_emp_poor_period <- get_transition_table(
+  best_model, "Employed", "Inactive long term sick",
+  mcs_val = -1, pcs_val = -1, wave_val = 6
+)
+
+display_transition_table(
+  tbl_emp_poor_period,
+  "Employed \u2192 LT Sick: rates per 10,000 (1 SD below avg health, period average)"
+)
+```
+
+## 1 SD Below Average Health, Latest Wave (Wave 11) {#sec-emp-poor-latest}
+
+```{r}
+#| label: emp-to-ltsick-table-poor-latest
+
+tbl_emp_poor_latest <- get_transition_table(
+  best_model, "Employed", "Inactive long term sick",
+  mcs_val = -1, pcs_val = -1, wave_val = 11
+)
+
+display_transition_table(
+  tbl_emp_poor_latest,
+  "Employed \u2192 LT Sick: rates per 10,000 (1 SD below avg health, wave 11)"
+)
+```
+
+## Visualisation: Transition Rates by Age {#sec-emp-viz}
+
+```{r}
+#| label: emp-to-ltsick-viz
+#| fig-cap: "Predicted Employed \u2192 LT Sick transition rates by age, sex, and NS-SEC class"
+#| fig-height: 8
+
+# Build predictions for both health levels at latest wave
+grid_avg <- build_pred_grid("Employed", 0, 0, 11) |> mutate(health_label = "Average health")
+grid_poor <- build_pred_grid("Employed", -1, -1, 11) |> mutate(health_label = "1 SD below average")
+grid_both <- bind_rows(grid_avg, grid_poor)
+
+preds_both <- predict(best_model, newdata = grid_both |> select(-health_label), type = "probs")
+grid_both$prob_ltsick <- preds_both[, "Inactive long term sick"]
+
+grid_both |>
+  mutate(nssec3 = factor(nssec3, levels = nssec_levels)) |>
+  ggplot(aes(x = age, y = prob_ltsick * 10000, colour = nssec3, linetype = sex)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(~health_label, ncol = 1, scales = "free_y") +
+  scale_colour_brewer(palette = "Set1", name = "NS-SEC Class") +
+  scale_linetype_manual(values = c("male" = "solid", "female" = "dashed"), name = "Sex") +
+  labs(
+    x = "Age",
+    y = "Transition rate per 10,000",
+    title = "Employed \u2192 Long-term Sick Transition Rates",
+    subtitle = "Predicted from Model 6, wave 11 (2019\u201320)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+# Long-term Sick to Employed Transition Rates {#sec-ltsick-to-emp}
+
+::: {.callout-note}
+## NS-SEC for Economically Inactive Individuals
+
+For individuals currently classified as Long-term Sick, their NS-SEC occupation class refers to their **most recent** occupation. This is meaningful for understanding return-to-work prospects but should be interpreted as reflecting prior occupational experience rather than current activity.
+:::
+
+## Average Health, Period Average (Wave 6)
+
+```{r}
+#| label: ltsick-to-emp-table-avg-period
+
+tbl_lts_avg_period <- get_transition_table(
+  best_model, "Inactive long term sick", "Employed",
+  mcs_val = 0, pcs_val = 0, wave_val = 6
+)
+
+display_transition_table(
+  tbl_lts_avg_period,
+  "LT Sick \u2192 Employed: rates per 10,000 (average health, period average)"
+)
+```
+
+## Average Health, Latest Wave (Wave 11)
+
+```{r}
+#| label: ltsick-to-emp-table-avg-latest
+
+tbl_lts_avg_latest <- get_transition_table(
+  best_model, "Inactive long term sick", "Employed",
+  mcs_val = 0, pcs_val = 0, wave_val = 11
+)
+
+display_transition_table(
+  tbl_lts_avg_latest,
+  "LT Sick \u2192 Employed: rates per 10,000 (average health, wave 11)"
+)
+```
+
+## 1 SD Below Average Health, Period Average (Wave 6)
+
+```{r}
+#| label: ltsick-to-emp-table-poor-period
+
+tbl_lts_poor_period <- get_transition_table(
+  best_model, "Inactive long term sick", "Employed",
+  mcs_val = -1, pcs_val = -1, wave_val = 6
+)
+
+display_transition_table(
+  tbl_lts_poor_period,
+  "LT Sick \u2192 Employed: rates per 10,000 (1 SD below avg health, period average)"
+)
+```
+
+## 1 SD Below Average Health, Latest Wave (Wave 11)
+
+```{r}
+#| label: ltsick-to-emp-table-poor-latest
+
+tbl_lts_poor_latest <- get_transition_table(
+  best_model, "Inactive long term sick", "Employed",
+  mcs_val = -1, pcs_val = -1, wave_val = 11
+)
+
+display_transition_table(
+  tbl_lts_poor_latest,
+  "LT Sick \u2192 Employed: rates per 10,000 (1 SD below avg health, wave 11)"
+)
+```
+
+## Visualisation: Return-to-Work Rates by Age {#sec-ltsick-viz}
+
+```{r}
+#| label: ltsick-to-emp-viz
+#| fig-cap: "Predicted LT Sick \u2192 Employed transition rates by age, sex, and NS-SEC class"
+#| fig-height: 8
+
+grid_lts_avg <- build_pred_grid("Inactive long term sick", 0, 0, 11) |>
+  mutate(health_label = "Average health")
+grid_lts_poor <- build_pred_grid("Inactive long term sick", -1, -1, 11) |>
+  mutate(health_label = "1 SD below average")
+grid_lts_both <- bind_rows(grid_lts_avg, grid_lts_poor)
+
+preds_lts_both <- predict(best_model,
+                           newdata = grid_lts_both |> select(-health_label),
+                           type = "probs")
+grid_lts_both$prob_employed <- preds_lts_both[, "Employed"]
+
+grid_lts_both |>
+  mutate(nssec3 = factor(nssec3, levels = nssec_levels)) |>
+  ggplot(aes(x = age, y = prob_employed * 10000, colour = nssec3, linetype = sex)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(~health_label, ncol = 1, scales = "free_y") +
+  scale_colour_brewer(palette = "Set1", name = "NS-SEC Class") +
+  scale_linetype_manual(values = c("male" = "solid", "female" = "dashed"), name = "Sex") +
+  labs(
+    x = "Age",
+    y = "Transition rate per 10,000",
+    title = "Long-term Sick \u2192 Employed Transition Rates",
+    subtitle = "Predicted from Model 6, wave 11 (2019\u201320)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+# Two-Cycle Pathway Analysis {#sec-two-cycle}
+
+## Motivation
+
+Direct transitions from Employed to Long-term Sick in a single wave are rare (approximately 0.4% of employed individuals per wave). However, over **two waves** (~2 years), individuals may reach Long-term Sick status via intermediate economic states. For example, an employed person may first become unemployed, then transition to long-term sickness.
+
+This section decomposes the two-cycle Employed $\to$ Long-term Sick probability into contributions from each of the 7 possible intermediate states.
+
+## Method
+
+For an individual with characteristics $\mathbf{x}$ who is Employed at wave $T$:
+
+1. **First transition** (wave $T$ to $T+1$): The model predicts $P(\text{State}_X | \text{Employed}, \mathbf{x}_T)$ for all 7 possible states $X$
+2. **Second transition** (wave $T+1$ to $T+2$): For each intermediate state $X$, the model predicts $P(\text{LT Sick} | \text{State}_X, \mathbf{x}_{T+1})$, where age increases by 1 and the wave advances by 1
+3. **Two-cycle pathway probability** via state $X$: $P(\text{Emp} \to X) \times P(X \to \text{LT Sick})$
+4. **Total two-cycle probability**: $\sum_{X} P(\text{Emp} \to X) \times P(X \to \text{LT Sick})$
+
+This follows the Chapman--Kolmogorov equation for discrete-time Markov chains [see @norris1998, Ch. 1]. We assume health scores remain constant across the two waves.
+
+::: {.callout-note}
+## Assumptions
+
+- **Markov property**: Transition probabilities depend only on the current state, not on history (empirically validated; see Discussion)
+- **Constant health**: SF-12 scores are held fixed across both waves
+- **Age increment**: Age increases by 1 year for the second wave
+- **Wave**: First cycle uses wave 10, second uses wave 11 (both within training data range)
+:::
+
+## Results: Average Health {#sec-two-cycle-avg}
+
+```{r}
+#| label: two-cycle-analysis-avg
+#| cache: true
+
+# Run two-cycle analysis for representative profiles at average health
+profiles_avg <- expand_grid(
+  sex = c("male", "female"),
+  age = c(30, 40, 50, 60),
+  nssec3 = nssec_levels
+)
+
+two_cycle_avg <- profiles_avg |>
+  pmap_dfr(function(sex, age, nssec3) {
+    calculate_two_cycle_pathways(
+      best_model, sex, age, nssec3,
+      mcs_val = 0, pcs_val = 0, wave_val = 10
+    ) |>
+      mutate(sex = sex, age = age, nssec3 = nssec3, health = "Average")
+  })
+```
+
+### Summary: Total Two-Cycle Probabilities
+
+```{r}
+#| label: two-cycle-summary-avg
+
+# Summary table: total two-cycle probability and top pathway
+two_cycle_summary_avg <- two_cycle_avg |>
+  group_by(sex, age, nssec3) |>
+  summarise(
+    total_two_cycle = sum(p_two_cycle),
+    top_pathway = intermediate_short[which.max(p_two_cycle)],
+    top_pct = max(pct_of_total),
+    .groups = "drop"
+  )
+
+two_cycle_summary_avg |>
+  mutate(
+    total_per_10k = round(total_two_cycle * 10000, 1),
+    top_pct = round(top_pct, 1),
+    nssec3 = factor(nssec3, levels = nssec_levels)
+  ) |>
+  select(sex, age, nssec3, total_per_10k, top_pathway, top_pct) |>
+  kable(
+    col.names = c("Sex", "Age", "NS-SEC Class",
+                  "Total 2-cycle rate (per 10k)", "Top pathway via", "% via top pathway"),
+    caption = "Two-cycle Employed \u2192 ... \u2192 LT Sick probabilities (average health)"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 11) |>
+  scroll_box(height = "400px")
+```
+
+### Comparison: One-Cycle vs Two-Cycle
+
+```{r}
+#| label: two-cycle-comparison
+#| fig-cap: "Comparison of direct (one-cycle) and total two-cycle Employed \u2192 LT Sick transition rates"
+
+# Get one-cycle probabilities for the same profiles
+one_cycle_avg <- profiles_avg |>
+  pmap_dfr(function(sex, age, nssec3) {
+    pred_data <- tibble(
+      this_status = "Employed", sex = sex, age = age,
+      sf12mcs_std = 0, sf12pcs_std = 0, nssec3 = nssec3, wave_num = 10
+    )
+    preds <- predict(best_model, newdata = pred_data, type = "probs")
+    # Single-row predict returns a named vector
+    tibble(sex = sex, age = age, nssec3 = nssec3,
+           one_cycle = preds[["Inactive long term sick"]])
+  })
+
+comparison_avg <- one_cycle_avg |>
+  left_join(
+    two_cycle_summary_avg |> select(sex, age, nssec3, total_two_cycle),
+    by = c("sex", "age", "nssec3")
+  ) |>
+  pivot_longer(
+    cols = c(one_cycle, total_two_cycle),
+    names_to = "type",
+    values_to = "probability"
+  ) |>
+  mutate(
+    type = ifelse(type == "one_cycle", "Direct (1 wave)", "Total via all paths (2 waves)"),
+    nssec3 = factor(nssec3, levels = nssec_levels)
+  )
+
+comparison_avg |>
+  ggplot(aes(x = factor(age), y = probability * 10000, fill = type)) +
+  geom_col(position = "dodge") +
+  facet_grid(sex ~ nssec3) +
+  scale_fill_brewer(palette = "Set2", name = "") +
+  labs(
+    x = "Age",
+    y = "Rate per 10,000",
+    title = "Direct vs Two-Cycle Employed \u2192 LT Sick Transitions",
+    subtitle = "Average health, wave 10\u201311"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Pathway Decomposition: Detailed View {#sec-pathway-detail}
+
+```{r}
+#| label: two-cycle-detail-table
+
+# Show detailed breakdown for age 50 profiles
+two_cycle_avg |>
+  filter(age == 50) |>
+  mutate(
+    nssec3 = factor(nssec3, levels = nssec_levels),
+    p_emp_to_x_pct = round(p_emp_to_x * 100, 2),
+    p_x_to_ltsick_pct = round(p_x_to_ltsick * 100, 2),
+    p_two_cycle_per_10k = round(p_two_cycle * 10000, 2),
+    pct_of_total = round(pct_of_total, 1)
+  ) |>
+  select(sex, nssec3, intermediate_short,
+         p_emp_to_x_pct, p_x_to_ltsick_pct, p_two_cycle_per_10k, pct_of_total) |>
+  kable(
+    col.names = c("Sex", "NS-SEC", "Intermediate state",
+                  "P(Emp\u2192X) %", "P(X\u2192LT Sick) %",
+                  "2-cycle rate per 10k", "% of total"),
+    caption = "Two-cycle pathway decomposition for age 50, average health"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 10) |>
+  scroll_box(height = "500px")
+```
+
+### Pathway Contributions: Stacked Chart
+
+```{r}
+#| label: two-cycle-stacked-viz
+#| fig-cap: "Contribution of each intermediate state to two-cycle Employed \u2192 LT Sick transitions"
+#| fig-height: 8
+
+two_cycle_avg |>
+  filter(age %in% c(30, 50)) |>
+  mutate(
+    nssec3 = factor(nssec3, levels = nssec_levels),
+    intermediate_short = fct_reorder(intermediate_short, p_two_cycle, .fun = sum, .desc = TRUE),
+    profile = paste0(sex, ", age ", age, "\n", nssec3)
+  ) |>
+  ggplot(aes(x = profile, y = p_two_cycle * 10000, fill = intermediate_short)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set2", name = "Intermediate state") +
+  labs(
+    x = "",
+    y = "Two-cycle rate per 10,000",
+    title = "Two-Cycle Pathway Decomposition",
+    subtitle = "Employed \u2192 Intermediate \u2192 LT Sick (average health, waves 10\u201311)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        axis.text.y = element_text(size = 8))
+```
+
+## Results: 1 SD Below Average Health {#sec-two-cycle-poor}
+
+```{r}
+#| label: two-cycle-analysis-poor
+#| cache: true
+
+two_cycle_poor <- profiles_avg |>
+  pmap_dfr(function(sex, age, nssec3) {
+    calculate_two_cycle_pathways(
+      best_model, sex, age, nssec3,
+      mcs_val = -1, pcs_val = -1, wave_val = 10
+    ) |>
+      mutate(sex = sex, age = age, nssec3 = nssec3, health = "1 SD below average")
+  })
+```
+
+```{r}
+#| label: two-cycle-summary-poor
+
+two_cycle_summary_poor <- two_cycle_poor |>
+  group_by(sex, age, nssec3) |>
+  summarise(
+    total_two_cycle = sum(p_two_cycle),
+    top_pathway = intermediate_short[which.max(p_two_cycle)],
+    top_pct = max(pct_of_total),
+    .groups = "drop"
+  )
+
+two_cycle_summary_poor |>
+  mutate(
+    total_per_10k = round(total_two_cycle * 10000, 1),
+    top_pct = round(top_pct, 1),
+    nssec3 = factor(nssec3, levels = nssec_levels)
+  ) |>
+  select(sex, age, nssec3, total_per_10k, top_pathway, top_pct) |>
+  kable(
+    col.names = c("Sex", "Age", "NS-SEC Class",
+                  "Total 2-cycle rate (per 10k)", "Top pathway via", "% via top pathway"),
+    caption = "Two-cycle Employed \u2192 ... \u2192 LT Sick probabilities (1 SD below average health)"
+  ) |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), font_size = 11) |>
+  scroll_box(height = "400px")
+```
+
+### Health Impact on Pathway Contributions
+
+```{r}
+#| label: two-cycle-health-comparison
+#| fig-cap: "Effect of health on two-cycle transition rates by age and NS-SEC"
+
+# Combine average and poor health summaries
+bind_rows(
+  two_cycle_summary_avg |> mutate(health = "Average"),
+  two_cycle_summary_poor |> mutate(health = "1 SD below average")
+) |>
+  mutate(nssec3 = factor(nssec3, levels = nssec_levels)) |>
+  ggplot(aes(x = factor(age), y = total_two_cycle * 10000, fill = health)) +
+  geom_col(position = "dodge") +
+  facet_grid(sex ~ nssec3) +
+  scale_fill_brewer(palette = "Paired", name = "Health level") +
+  labs(
+    x = "Age",
+    y = "Total two-cycle rate per 10,000",
+    title = "Two-Cycle Employed \u2192 LT Sick: Impact of Health",
+    subtitle = "Comparison of average vs 1 SD below average health"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+# Discussion
+
+## Transition Rate Tables
+
+The full age-by-sex-by-NS-SEC transition rate tables in @sec-emp-to-ltsick and @sec-ltsick-to-emp provide the detailed rates requested for actuarial analysis. Key patterns:
+
+- **Employed to LT Sick** rates increase steeply with age, particularly after age 45, and show a clear occupation gradient (Routine & Manual > Intermediate > Management & Professional)
+- **LT Sick to Employed** (return-to-work) rates decrease with age, reflecting the difficulty of re-entering the labour market at older ages
+- **Health** is a powerful modifier: rates for those with health 1 SD below average are substantially elevated compared to the average-health scenario
+
+## Two-Cycle Pathways
+
+The two-cycle analysis reveals the most common routes from employment to long-term sickness over a two-year period:
+
+- The **dominant pathway** is typically Employed $\to$ Employed $\to$ LT Sick -- most people who end up long-term sick were still employed one wave earlier, reflecting the sudden onset or gradual worsening that tips into a status change
+- **Unemployed** serves as a notable intermediate state, particularly for younger workers and those in routine/manual occupations
+- The total two-cycle probability of reaching LT Sick is substantially larger than the direct one-cycle probability, highlighting that cumulative risk over even modest time horizons is meaningfully higher than single-wave rates suggest
+
+## Implications for Actuarial Risk Modelling
+
+1. **Multi-period projections**: Single-wave transition rates understate cumulative disability incidence. The two-cycle framework provides a more realistic basis for projecting long-term sickness populations over multi-year horizons
+2. **Pathway targeting**: Understanding which intermediate states serve as "gateways" to long-term sickness could inform early intervention strategies
+3. **Health as a leading indicator**: The strong effect of health scores on both direct and indirect pathways suggests that health monitoring could provide early warning of elevated transition risk
+
+## Validity of the Markov Assumption
+
+The two-cycle pathway decomposition relies on the first-order Markov property: that transition probabilities depend only on the current economic state, not on prior history. This assumption was empirically tested in earlier work [@minton2024] by comparing models that included additional lagged status terms ($y_{t-1}$, $y_{t-2}$, etc.) as predictors alongside the current status $y_t$. These higher-order specifications did not improve penalised model fit (AIC/BIC), supporting the use of a first-order Markov model and, by extension, the Chapman--Kolmogorov decomposition used here.
+
+This is analogous to AR(p) model selection in time series analysis: the data favour a model where current state is a sufficient summary of the individual's history for predicting their next transition.
+
+## Limitations
+
+- **Constant health**: Health scores are held fixed across cycles; in practice, health may deteriorate along the pathway, meaning the two-cycle analysis may understate cumulative risk for individuals on a declining health trajectory
+- **Pre-pandemic data**: All results reflect 2009--2020 patterns [@platt2021] and may not capture post-pandemic changes in labour market transitions [@tinson2022]
+- **Complete cases**: Individuals missing health or occupation data are excluded, which may introduce selection bias if missingness is related to health or economic status
+
+## Potential Extensions
+
+Three extensions could strengthen these results in future work:
+
+1. **Post-pandemic update**: UKHLS waves 12--13 (2020--2022) are available and could be incorporated to assess whether transition dynamics have shifted since the pandemic. The sharp rise in health-related economic inactivity observed in administrative data [@tinson2022] suggests that pre-pandemic transition rates may understate current flows into long-term sickness.
+
+2. **Multiple imputation**: The analysis sample falls from 305,000 (core demographics) to 190,000 (full model with health and occupation) due to complete-case analysis. Multiple imputation of missing SF-12 scores and NS-SEC values would recover much of this sample and -- more importantly -- reduce potential selection bias if missingness is itself associated with economic status or health.
+
+3. **Stochastic simulation**: The current analysis reports expected (point estimate) transition probabilities. A stochastic extension would draw from the predicted multinomial distribution to generate confidence intervals around the transition rates and pathway probabilities. This would be particularly valuable for actuarial reserving applications where quantifying uncertainty is as important as estimating central tendencies.
+
+# Session Information
+
+```{r}
+#| label: session-info
+sessionInfo()
+```
+
+# References
