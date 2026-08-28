@@ -88,6 +88,14 @@ Hand-over order: David → Chris → Jon → David → All.
   the slide origin, unwrapped, over the title. The script copies each placeholder's geometry from
   the layout into the slide explicitly and sets wrap + shrink-to-fit. If a slide still looks wrong,
   check it is on a layout listed above.
+- **Known issue — PowerPoint asks to "repair" on first open** (28 Aug, after the geometry fix).
+  The repaired file works and text sits in the right place. Cause is some strictly-invalid XML
+  from the patches (suspects: `wrap`/`normAutofit` in `fix_pptx.py`, or the placeholders injected
+  into the title / section-header layouts). To bisect: open the deck from commit `8f3b8dd`
+  (before `fix_pptx.py`) and see whether it also prompts. Fix before circulating to David/Chris.
+- **Format choice**: pptx is less native to pandoc than reveal.js, but it is what the IFoA
+  requires and it lets co-presenters edit without touching the codebase. Once content is
+  finalised, the last-mile polish will be done in PowerPoint, not re-rendered.
 - **Pandoc slide splitting**: when a slide mixes a table or image with bullets, pandoc may push the
   overflow onto an untitled continuation slide (e.g. the HWP Tool slide). Keep one block type per
   slide, or accept the split and title it by hand.
