@@ -1,0 +1,126 @@
+# IFoA Life Conference 2026 (Birmingham, November) — presentation notes
+
+Working notes for the Healthy Workforce Working Party talk. Source paper:
+[reports/ifoa/HWLE_Methods_v17.docx](../../reports/ifoa/HWLE_Methods_v17.docx).
+Deck: [hwle_ifoa_life_2026.qmd](hwle_ifoa_life_2026.qmd) → `hwle_ifoa_life_2026.pptx`.
+
+## Key constraints (email from David Beddows, 28 Aug 2026, after initial call)
+
+- **Submission deadline: 18 October 2026**
+- **Must use the IFoA template** (`IFoA LIFE Conference.pptx`, supplied by email)
+- **Session is 45 minutes**: 35 min presenting + 10 min Q&A
+- Aim for **2–3 minutes per slide → 10–18 slides total**
+- Not recorded; may be shared on a restricted virtual learning environment for actuaries
+- Audience: mostly life and health actuaries, plus general life-insurance industry delegates
+- Next call: same time, two weeks after 28 Aug (≈ 11 Sept 2026) — David to schedule
+
+## Agreed high-level structure
+
+| # | What | Who | Timing |
+|---|------|-----|--------|
+| 1 | Agenda (and personal intros, or weave into later sections) | David | 2–5 min |
+| 2 | Background to the Working Party | David | 5 min |
+| 3 | Importance of this topic (Sir Charlie Mayfield review — *Keep Britain Working* 2025, the new name for *Get Britain Working*; 2026 news; also the Darzi review, though NHS-focused) — review, plus reflections from a clinical practitioner / human perspective | Chris Martin | 10 min |
+| 4 | Public health approaches with survey data | Jon | 5–10 min |
+| 5 | HWLE estimates with CMI rates | David | 10 min |
+| 6 | Q&A and next steps for the WP | All | 10 min |
+
+Presenters: David Beddows, Chris Martin, Jon Minton — on behalf of the whole WP (Z. Woodroffe, D. Bates, S. Batrakova, R. Pal, C. Zhang also to be named on slides).
+Hand-over order: David → Chris → Jon → David → All.
+
+## Additional points from the 28 Aug call (Pocket AI transcript, recording 96f155b2…)
+
+- **Slide count, realistically ~10–12**: David presented at this conference two years ago with ~15
+  slides and "even that was too much". After intros and Q&A there is c. 25 min of real material;
+  rule of thumb ≥ 2 min/slide → ~12 slides. Treat 18 as a hard ceiling, 12 as the target.
+- Room of perhaps 50 people (attendance unpredictable); ~95% actuaries, the rest life-insurance
+  industry delegates. Some technically minded, others commercially minded and interested in what
+  it means for their business — "a little bit of everything". The submitted abstract does *not*
+  describe a very technical talk.
+- **Framing for the whole talk**: the topic is relevant from both public-health and
+  actuarial/life-insurance perspectives; a central question is *what are the best data sources*
+  for these multi-state models — survey data or CMI experience? Emphasise **triangulation**:
+  independent approaches reaching the same direction gives reassurance the findings are real, not
+  artefacts of method assumptions.
+- **Avoid double-counting methods** between Jon's UKHLS section and David's CMI section — there is
+  a lot of overlap in the multi-state modelling; only one of them should explain it.
+- Audience will be familiar with multi-state model *concepts*; don't spend time on technical
+  modelling detail. One or two multi-state model diagrams are enough.
+- **Chris Martin** — former occupational physician and GP (c. 20 years ago). His section:
+  (1) review of the reports (Darzi review 2024 — NHS-focused but discussed health of the working
+  population; cited when the WP was set up; Mayfield — started as *Get Britain Working*, latest form
+  *Keep Britain Working*; also 2026 outputs from the Health Foundation and a think tank — transcript
+  garbled as "Pink Tank", confirm which), and (2) reflection — the coal-face / human perspective on
+  poor health and its impact on individuals. Chris wants to reflect what is actually in the reports
+  and bring them to life. He will draft his content as a text document for Jon to fold into the .qmd.
+- Each presenter gives a slightly longer **personal introduction when taking over their section**,
+  rather than all intros up front.
+- Working method: treat the generated deck as a scrapbook; pull the best slides into a key-materials
+  version and iterate on the .qmd.
+- David's actions: supply disclaimer wording; double-check with the CMI that the paper's diagrams
+  and content can be used in the public domain (a check was already requested at the last WP meeting).
+
+## Template mechanics
+
+- `ifoa_life_template.pptx` — the IFoA template as supplied (untouched copy).
+- `ifoa_life_reference.pptx` — derived copy used as Quarto's `reference-doc`. Pandoc only
+  recognises fixed layout names, so six IFoA layouts are *renamed* (XML only, design unchanged):
+
+  | IFoA layout | Renamed to (pandoc name) | Used for |
+  |---|---|---|
+  | Single column | Title and Content | ordinary bullet/table slides |
+  | 1_Two Columns | Two Content | `:::: {.columns}` slides |
+  | Two columns - in 3rds | Comparison | two columns with headings |
+  | Single column + image | Content with Caption | text + one image |
+  | Blank with footer - Colour | Section Header | `#` level-1 headings |
+  | Blank with footer - White | Blank | image-only slides |
+
+  Regenerate with the Python snippet in the git history of this folder if the template is
+  updated (or just repeat the renames). Never edit `ifoa_life_template.pptx` directly.
+- Other IFoA layouts (3/4 columns, thumbnail gallery, background image) are not reachable
+  from Quarto; apply them by hand in PowerPoint after the final render if wanted.
+- No LibreOffice on this laptop, so rendered decks are checked structurally, not visually —
+  open the `.pptx` in PowerPoint/Keynote to eyeball.
+
+## Decisions log (from question checklists in the .qmd)
+
+Resolved:
+- Slot: 45 min incl. Q&A; three presenters with hand-overs.
+- Workshop-stream style talk; mixed actuarial / life-industry audience.
+- Template: IFoA template mandatory (done — see above).
+- Deadline: 18 October.
+- Not recorded; possibly shared on restricted VLE.
+- Mayfield review: *Keep Britain Working* is the current name (renamed from *Get Britain Working*).
+- Lit review ≈ 5 min, folded into Jon's survey-data section.
+- Diagrams only, no equations.
+- No live/screenshot demo of the Excel HWP Tool.
+- UKHLS / economic-inactivity work covered briefly in Jon's section.
+
+Open (actions):
+- [ ] **David** to supply standard IFoA WP disclaimer wording → Jon.
+- [ ] **David** to confirm CMI diagrams (WP 109 figures) are still publicly reproducible — believed
+      to pre-date subscriber restrictions; check no retrospective change.
+- [ ] Core message to lead with (methods / insurance / policy) — not yet chosen.
+- [ ] Figure 5 (HWP Tool 4-state diagram) is missing from the docx — needs drawing.
+- [ ] Chris: content for the Mayfield/Keep Britain Working review and clinical reflections.
+- [ ] David: Working Party background slide content.
+- [ ] Chris: decide prominence of the Darzi review (2024, NHS-focused) alongside Mayfield.
+- [x] Jon: reviewed Pocket AI transcript of 28 Aug call (see section above).
+- [ ] Chris: confirm the Health Foundation / think-tank 2026 outputs to cite.
+- [ ] Jon + David: agree which section explains multi-state modelling, to avoid double-counting.
+
+## Main vs. Supplement
+
+The .qmd is split into a **MAIN DECK** and a **SUPPLEMENT**. The supplement is grouped under the
+main section each slide would fold back into (Why this matters / Survey approaches / CMI rates /
+Close), so at each iteration we can review it and decide per slide: promote, keep as appendix, or
+delete. Anything in main that turns out to be detail goes down to the supplement. Question slides
+are deleted before submission; the supplement is either deleted or kept as a labelled appendix.
+
+## Slide budget (target ~12, ceiling 18)
+
+Main deck currently: agenda 1 · WP background 1 · importance 2 · survey approaches 3 ·
+CMI estimates 4 · next steps 1 · thank-you 1 = **13 content slides** (+ title).
+Supplement: 10 slides ("what we can measure", SPA table, admin-vs-survey trade-offs, definitions,
+results-by-age chart, OC descriptions, CMI 3-state model, rate table, data volumes, LE table,
+references).
