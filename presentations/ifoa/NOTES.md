@@ -75,8 +75,13 @@ Hand-over order: David → Chris → Jon → David → All.
   | Blank with footer - Colour | Section Header | `#` level-1 headings |
   | Blank with footer - White | Blank | image-only slides |
 
-  Regenerate with the Python snippet in the git history of this folder if the template is
-  updated (or just repeat the renames). Never edit `ifoa_life_template.pptx` directly.
+  Two further XML patches were needed, because pandoc writes into placeholders the IFoA
+  layouts lack: the *Title Slide* layout's `title` placeholder was retyped `ctrTitle` (font 40pt)
+  and a `subTitle` placeholder added beneath it (subtitle, presenters, date land here); and a
+  `title` placeholder was injected into *Blank with footer - Colour* so section-header slides
+  show their heading. Without these, title and section slides render empty except for the footer.
+  Regenerate by repeating the renames/patches if the template is updated (see git history of
+  this folder for the Python used). Never edit `ifoa_life_template.pptx` directly.
 - Other IFoA layouts (3/4 columns, thumbnail gallery, background image) are not reachable
   from Quarto; apply them by hand in PowerPoint after the final render if wanted.
 - No LibreOffice on this laptop, so rendered decks are checked structurally, not visually —
