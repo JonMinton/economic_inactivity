@@ -54,4 +54,5 @@ big_data/
 # IFoA model outputs (regenerate with _fit_models.R)
 reports/ifoa/models/*.rds
 reports/ifoa/models/data_*.rds
-presentations/ifoa/*_repaired.pptx
+presentations/ifoa/*[Rr]epaired*.pptx
+presentations/ifoa/~$*
