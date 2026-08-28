@@ -51,9 +51,9 @@ def fix_slide(slide_xml, geo):
         x = geo.get(key) or geo.get(('*', key[1])) or geo.get((key[0], '*'))
         if not x:
             return sp
-        # insert xfrm into spPr
-        if '<p:spPr/>' in sp:
-            sp = sp.replace('<p:spPr/>', f'<p:spPr>{x}</p:spPr>', 1)
+        # insert xfrm into spPr (pandoc writes the empty element as "<p:spPr />", with a space)
+        if re.search(r'<p:spPr\s*/>', sp):
+            sp = re.sub(r'<p:spPr\s*/>', f'<p:spPr>{x}</p:spPr>', sp, count=1)
         elif '<p:spPr>' in sp:
             sp = sp.replace('<p:spPr>', f'<p:spPr>{x}', 1)
         else:
@@ -85,6 +85,16 @@ def dedupe_ids(slide_xml):
     return re.sub(r'<p:cNvPr id="(\d+)"', repl, slide_xml)
 
 
+BAD_APP_REL = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/extended-properties'
+GOOD_APP_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties'
+
+
+def fix_package_rels(rels_xml):
+    """pandoc 3.1.2 (bundled with Quarto 1.9) links docProps/app.xml with the wrong
+    relationship type; PowerPoint flags the package as needing repair."""
+    return rels_xml.replace(BAD_APP_REL, GOOD_APP_REL)
+
+
 def main(path):
     tmp = path + '.tmp'
     zin = zipfile.ZipFile(path)
@@ -95,6 +105,8 @@ def main(path):
     fixed = 0
     for it in zin.infolist():
         data = zin.read(it.filename)
+        if it.filename == '_rels/.rels':
+            data = fix_package_rels(data.decode('utf8')).encode('utf8')
         m = re.match(r'ppt/slides/(slide\d+)\.xml$', it.filename)
         if m:
             rels = zin.read(f'ppt/slides/_rels/{m.group(1)}.xml.rels').decode('utf8')

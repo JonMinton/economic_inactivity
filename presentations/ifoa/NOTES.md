@@ -88,8 +88,17 @@ Hand-over order: David → Chris → Jon → David → All.
   placeholders with no position, relying on layout inheritance that PowerPoint does not resolve
   for the IFoA layouts' custom placeholder indices — text landed at the slide origin, unwrapped,
   over the title. The script copies each placeholder's geometry from its layout into the slide,
-  sets wrap + shrink-to-fit, and renumbers duplicate shape ids that pandoc emits on picture and
-  table slides (another repair trigger).
+  sets wrap + shrink-to-fit, renumbers duplicate shape ids that pandoc emits on picture and
+  table slides, and corrects the package relationship type for `docProps/app.xml` (pandoc 3.1.2,
+  bundled with Quarto 1.9, writes `package/.../metadata/extended-properties` instead of
+  `officeDocument/.../extended-properties` — a repair trigger on its own, present even with no
+  reference doc).
+- **Repair-prompt history (28 Aug)**: three independent triggers were found by diffing PowerPoint's
+  repaired save against the render, in two rounds: (1) dangling relationships from the
+  three-master template → fixed in `build_reference.py`; (2) the wrong `app.xml` relationship type
+  from pandoc → fixed in `fix_pptx.py`; (3) a bug in an early `fix_pptx.py` that left shapes with
+  two `<p:spPr>` elements (pandoc writes `<p:spPr />` with a space) → fixed. Verification after the
+  fixes: 0 dangling rels, 0 duplicate ids, 0 shapes with ≠1 `spPr`, correct package rels.
 - **Verification without PowerPoint** (no LibreOffice on this laptop): unzip the pptx and check
   (a) every `.rels` target exists, (b) no duplicate `<p:cNvPr id>` per slide, (c) one master,
   (d) expected `<a:t>` text on title/section/content slides. Both scripts' checks were clean on
