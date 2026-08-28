@@ -99,6 +99,11 @@ Hand-over order: David → Chris → Jon → David → All.
   from pandoc → fixed in `fix_pptx.py`; (3) a bug in an early `fix_pptx.py` that left shapes with
   two `<p:spPr>` elements (pandoc writes `<p:spPr />` with a space) → fixed. Verification after the
   fixes: 0 dangling rels, 0 duplicate ids, 0 shapes with ≠1 `spPr`, correct package rels.
+  **Status: PowerPoint still prompts to repair on first open, but the repaired file is complete
+  and correct. Decision (Jon, 28 Aug): not cost-effective to chase further — the hand-off
+  workflow is open → accept repair → Save As, and circulate the repaired copy.** If it ever
+  matters (e.g. IFoA submission portal rejects the file), repeat the diff-the-repaired-save
+  method; the remaining cause has not been identified.
 - **Verification without PowerPoint** (no LibreOffice on this laptop): unzip the pptx and check
   (a) every `.rels` target exists, (b) no duplicate `<p:cNvPr id>` per slide, (c) one master,
   (d) expected `<a:t>` text on title/section/content slides. Both scripts' checks were clean on
