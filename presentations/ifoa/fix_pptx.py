@@ -60,11 +60,29 @@ def fix_slide(slide_xml, geo):
             sp = sp.replace('</p:nvSpPr>', f'</p:nvSpPr><p:spPr>{x}</p:spPr>', 1)
         # wrap + shrink text on overflow
         sp = re.sub(r'<a:bodyPr\s*/>',
-                    '<a:bodyPr wrap="square" rtlCol="0"><a:normAutofit/></a:bodyPr>', sp, 1)
+                    '<a:bodyPr wrap="square" rtlCol="0"><a:normAutofit/></a:bodyPr>', sp, count=1)
         sp = re.sub(r'<a:bodyPr([^/>]*)/>',
-                    r'<a:bodyPr\1 wrap="square"><a:normAutofit/></a:bodyPr>', sp, 1)
+                    r'<a:bodyPr\1 wrap="square"><a:normAutofit/></a:bodyPr>', sp, count=1)
         return sp
-    return SP_RE.sub(repl, slide_xml)
+    out = SP_RE.sub(repl, slide_xml)
+    return dedupe_ids(out)
+
+
+def dedupe_ids(slide_xml):
+    """pandoc emits duplicate <p:cNvPr id> values (pictures get id=1, clashing with the
+    spTree group; copied footer placeholders reuse a body id). Renumber repeats."""
+    seen, counter = set(), [0]
+    ids = [int(i) for i in re.findall(r'<p:cNvPr id="(\d+)"', slide_xml)]
+    counter[0] = max(ids, default=1)
+
+    def repl(m):
+        i = int(m.group(1))
+        if i in seen:
+            counter[0] += 1
+            i = counter[0]
+        seen.add(i)
+        return f'<p:cNvPr id="{i}"'
+    return re.sub(r'<p:cNvPr id="(\d+)"', repl, slide_xml)
 
 
 def main(path):
