@@ -82,6 +82,15 @@ Hand-over order: David → Chris → Jon → David → All.
   show their heading. Without these, title and section slides render empty except for the footer.
   Regenerate by repeating the renames/patches if the template is updated (see git history of
   this folder for the Python used). Never edit `ifoa_life_template.pptx` directly.
+- **`fix_pptx.py` post-render step** (run automatically by `_quarto.yml` on every render): pandoc
+  writes body/content placeholders with no position, relying on the layout — and PowerPoint does
+  not resolve that inheritance for the IFoA layouts' custom placeholder indices, so text landed at
+  the slide origin, unwrapped, over the title. The script copies each placeholder's geometry from
+  the layout into the slide explicitly and sets wrap + shrink-to-fit. If a slide still looks wrong,
+  check it is on a layout listed above.
+- **Pandoc slide splitting**: when a slide mixes a table or image with bullets, pandoc may push the
+  overflow onto an untitled continuation slide (e.g. the HWP Tool slide). Keep one block type per
+  slide, or accept the split and title it by hand.
 - Other IFoA layouts (3/4 columns, thumbnail gallery, background image) are not reachable
   from Quarto; apply them by hand in PowerPoint after the final render if wanted.
 - No LibreOffice on this laptop, so rendered decks are checked structurally, not visually —

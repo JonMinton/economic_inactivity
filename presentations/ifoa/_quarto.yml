@@ -1,0 +1,3 @@
+project:
+  type: default
+  post-render: python3 fix_pptx.py hwle_ifoa_life_2026.pptx
