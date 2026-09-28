@@ -159,3 +159,10 @@ CMI estimates 4 · next steps 1 · thank-you 1 = **13 content slides** (+ title)
 Supplement: 10 slides ("what we can measure", SPA table, admin-vs-survey trade-offs, definitions,
 results-by-age chart, OC descriptions, CMI 3-state model, rate table, data volumes, LE table,
 references).
+
+## Bridge redraft and pptx lessons (28 Sep 2026)
+
+- Jon's section redrafted to the 11 Sep brief: 3 slides, 5 min (deck slides 14–17). Old ELSA/UKHLS/strengths slides moved to Supplement · Survey approaches. Diagram: `media/bridge_states.dot` (Graphviz), stacked into `media/bridge_states_stacked.png` by drawing each cluster separately. Sent to David, cc Chris, as `hwle_ifoa_life_2026_jon-bridge-3-slides_2026-09-28  -  Repaired.pptx`. Open question to David: is reaching 65 a state or the model's stopping point?
+- **Pandoc pptx splits a slide** when an image is followed by text, or when anything follows a `:::: {.columns}` block. Put the image in a column and keep trailing lines inside the last column.
+- **No automated slide preview**: Keynote's AppleScript `open` returns nothing for this pptx, and PowerPoint's repair prompt blocks scripted export. Check structure with python-pptx; Jon views in PowerPoint.
+- **Candidate after 18 Oct**: drop the qmd → pandoc → fix_pptx chain for pptx-only decks and build directly with python-pptx on the IFoA template (exact placement, no repair prompt). The qmd's remaining value is as a plain-text review surface.
