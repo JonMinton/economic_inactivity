@@ -1,0 +1,21 @@
+digraph G {
+  graph [rankdir=LR, bgcolor="white", fontname="Helvetica", fontsize=16, nodesep=0.35, ranksep=0.7, pad=0.2];
+  node  [shape=box, style="rounded,filled", fillcolor="#EEF2F7", color="#2F4A6D", fontname="Helvetica", fontsize=15, penwidth=1.4];
+  edge  [color="#2F4A6D", penwidth=1.4, arrowsize=0.8, fontname="Helvetica", fontsize=12];
+
+  subgraph cluster_a { label="(a) Life table: two states"; labeljust=l; color="#BBBBBB"; style=rounded;
+    a_alive [label="Alive"]; a_dead [label="Dead", shape=box, peripheries=2, fillcolor="#E6E6E6"];
+    a_alive -> a_dead;
+  }
+  subgraph cluster_b { label="(b) Illness–death: recovery possible"; labeljust=l; color="#BBBBBB"; style=rounded;
+    b_h [label="Healthy"]; b_s [label="Sick"]; b_d [label="Dead", peripheries=2, fillcolor="#E6E6E6"];
+    b_h -> b_s; b_s -> b_h [label="recovery"]; b_h -> b_d; b_s -> b_d;
+  }
+  subgraph cluster_c { label="(c) Health and work"; labeljust=l; color="#BBBBBB"; style=rounded;
+    c_w [label="Working"]; c_n [label="Sick,\nnot working"]; c_r [label="Retired"]; c_d [label="Dead", peripheries=2, fillcolor="#E6E6E6"];
+    c_w -> c_n; c_n -> c_w [label="recovery"]; c_w -> c_r; c_n -> c_r;
+    c_r -> c_w [style=dashed, color="#999999", fontcolor="#777777", label="unretiring\n(usually ignored)"];
+    c_w -> c_d; c_n -> c_d; c_r -> c_d;
+  }
+  a_dead -> b_h [style=invis]; b_d -> c_w [style=invis];
+}

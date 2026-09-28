@@ -121,7 +121,7 @@ Conventions:
 
 1. Background to the Healthy Workforce Working Party — *David*
 2. Why this matters: Keep Britain Working, and a clinician's view — *Chris*
-3. Public health approaches using survey data — *Jon*
+3. From survey data to administrative data: multi-state models — *Jon*
 4. Healthy working life expectancy from CMI income protection rates — *David*
 5. Q&A and next steps — *all*
 
@@ -177,66 +177,90 @@ TODO (Chris): reflections as a former occupational physician and GP — the coal
 
 ---
 
-# Public health approaches with survey data [JON · 5–10 min]
+# From survey data to administrative data [JON · 5 min]
 
-## How HWLE has been estimated so far
-
-- All published UK HWLE estimates use **survey data**, mainly ELSA (age 50+)
-- **Sullivan method**: life table × cross-sectional *prevalence* of health states
-- **Multi-state (Markov) models**: transition rates between states, estimated from repeated waves
-  - Lynch et al. 2022 — 3 states, ELSA waves 2–6, n ≈ 11,500
-  - Parker et al. 2020 — 5 states, ELSA waves 1–6, n ≈ 15,300; HWLE at 50 ≈ **10.8 years** for those healthy and working at 50
+## Multi-state models: a reminder
 
 :::: {.columns}
-::: {.column width="50%"}
-![Lynch 3-state model](media/image1.png)
+::: {.column width="55%"}
+![](media/bridge_states_stacked.png)
 :::
-::: {.column width="50%"}
-![Parker 5-state model](media/image2.png)
+::: {.column width="45%"}
+- A life table is a two-state model. Add states, and the same machinery gives **expected time in each state**: HWLE is expected years *working*.
+- **Absorbing** states can't be left (death, double border). **Non-absorbing** states can: sickness allows recovery.
+- Retirement is usually modelled as one-way, but in life it isn't quite absorbing.
 :::
 ::::
 
-## Modelling transitions in UKHLS (Understanding Society)
+::: {.notes}
+Jon Minton, Knowledge Tree and Butterfly: one-line intro on taking over from Chris.
 
-- Household panel, waves 1–13 (2009–2022), all working ages — not just 50+
-- Economic status: employed / unemployed / long-term sick / student / carer / retired / other
-- Multinomial model of *next-wave* status given *this-wave* status, age, sex — a Markov chain from survey data
-- Add health (SF-12 mental & physical scores, limiting illness) and ask **counterfactual** questions: what if health were better?
-  - e.g. improving mental and physical health by 1 SD → ~30% fewer long-term sick
+About 1.5 minutes. A reminder, not a lecture: everyone here has seen multi-state life tables. Panel (a) is the life table; (b) adds a state you can leave; (c) is the shape of the health-and-work problem. Double border = absorbing.
 
-TODO: one figure — transition matrix or PAF-style bar chart from reports/ifoa/ work.
+Retirement: "Hotel California": you can check out any time you like, but you can never leave. In the model it is one-way; in life people do unretire, and pension-age policy cares about exactly that.
+:::
 
-## What survey data can and cannot do
+## Same machinery, two traditions
 
 :::: {.columns}
 ::: {.column width="50%"}
-**Strengths**
+**Health economics**
 
-- Exists, well understood, accessible
-- Representative of the whole population
-- Covers people *not* currently working
-- Observes health *while* working
+- Markov *cohort* models with many states, recovery included
+- Each state carries a **cost** and a **utility** (quality of life)
+- Question: *is this intervention worth paying for?* (cost per QALY)
+- Usually parameterised from trials and **surveys**
 :::
 ::: {.column width="50%"}
-**Weaknesses**
+**Actuarial**
 
-- Self-reported health and work status
-- Prevalence at annual snapshots, not dated events
-- Transitions within a year unobserved
-- Tens of thousands of respondents at best
+- Multi-state models from **dated events** (time-to-event)
+- Rates can depend on **duration** in a state
+- Question: *how long, and at what cost, in each state?*
+- Usually parameterised from **experience data**
+
+*HWLE sits between them: a public-health question answered with actuarial tools.*
 :::
 ::::
 
-→ Hand-over: can *administrative* data do better?
+::: {.notes}
+About 1.5 minutes. The point for this audience: health economists and actuaries build the same kind of model and ask different questions of it. Health economics attaches utilities and costs to states to decide what to fund; actuaries attach durations and money to states to price and reserve. Working-age ill health is a place where both questions matter: the policy question (Keep Britain Working, from Chris) and the insurance question (David's section).
+:::
+
+## What survey data give us, and what they force on us
+
+:::: {.columns}
+::: {.column width="50%"}
+**Surveys give us** (ELSA, Understanding Society)
+
+- The whole population, including people *not* working or insured
+- Health *and* work status, observed together
+- Accessible, well understood, long-running
+:::
+::: {.column width="50%"}
+**Surveys force on us**
+
+- Roughly **annual waves**: status at snapshots, not dated events
+- So: **one-year Markov steps**; moves between waves are unseen
+- No **duration** since onset, so recovery can't depend on it
+- Self-reported states; tens of thousands of people at best
+
+→ Administrative data relax these. **Over to David:** HWLE from insurers' claims.
+:::
+::::
+
+::: {.notes}
+About 2 minutes, ending on the hand-off. Survey data are the only view of the whole population, which is why every published UK HWLE estimate so far uses them (ELSA: Lynch 2022, Parker 2020; supplement). But annual waves mean the model can only be a one-year Markov chain: what happened between interviews is invisible, and there is no clock on how long someone has been sick. Actuarial time-to-event data give dated claim inceptions and recoveries, with recovery depending on how long the claim has run. Hand over: "David will show what that buys us: healthy working life expectancy from CMI income protection experience."
+:::
 
 ## ❓ Questions — Survey approaches
 
-- [ ] 5 or 10 minutes? Three slides fits 5–7 min; add a UKHLS results slide if 10.
-- [ ] Are the Lynch/Parker figures OK to reproduce, or redraw schematically?
-- [ ] Which UKHLS figure to show — transition table (03_feedback_response) or a counterfactual bar chart?
-- [ ] Keep the "strengths/weaknesses" as the bridge into David's section, or let David make the admin-data case himself?
-- [ ] Where does the **triangulation** message go — here (survey ≈ 12.5 yrs vs CMI ≈ 13.5 yrs, same direction) or in David's comparison slide?
-- [ ] Multi-state modelling explained here (UKHLS Markov model) or in David's section — not both.
+- [x] 5 or 10 minutes? **5, three slides** (agreed with David and Chris, 11 Sep).
+- [x] "Current approaches" heading dropped (11 Sep). Lynch/Parker literature slide and the UKHLS counterfactual slide moved to Supplement · Survey approaches.
+- [x] Multi-state modelling explained **once, here**, as a reminder; David's section uses it without re-explaining.
+- [ ] David: does the hand-off line match your HWLE definition (expected years working, 50 to 65, partial expectancy)? Reword to suit.
+- [ ] Triangulation message (survey ≈ 12.5 yrs vs CMI ≈ 13.5 yrs): stays in David's comparison slide.
+- [ ] Health-economics column: add one worked example (e.g. a return-to-work intervention's cost per QALY) or keep generic?
 
 ---
 
@@ -365,6 +389,55 @@ Main-deck slide count is tracked in NOTES.md.
 | | 2047 onwards | 68 | 68 |
 
 # Supplement · Survey approaches
+
+## Survey-based HWLE so far (ELSA)
+
+- All published UK HWLE estimates use **survey data**, mainly ELSA (age 50+)
+- **Sullivan method**: life table × cross-sectional *prevalence* of health states
+- **Multi-state (Markov) models**: transition rates between states, estimated from repeated waves
+  - Lynch et al. 2022 — 3 states, ELSA waves 2–6, n ≈ 11,500
+  - Parker et al. 2020 — 5 states, ELSA waves 1–6, n ≈ 15,300; HWLE at 50 ≈ **10.8 years** for those healthy and working at 50
+
+:::: {.columns}
+::: {.column width="50%"}
+![Lynch 3-state model](media/image1.png)
+:::
+::: {.column width="50%"}
+![Parker 5-state model](media/image2.png)
+:::
+::::
+
+## Modelling transitions in UKHLS (Understanding Society)
+
+- Household panel, waves 1–13 (2009–2022), all working ages — not just 50+
+- Economic status: employed / unemployed / long-term sick / student / carer / retired / other
+- Multinomial model of *next-wave* status given *this-wave* status, age, sex — a Markov chain from survey data
+- Add health (SF-12 mental & physical scores, limiting illness) and ask **counterfactual** questions: what if health were better?
+  - e.g. improving mental and physical health by 1 SD → ~30% fewer long-term sick
+
+TODO: one figure — transition matrix or PAF-style bar chart from reports/ifoa/ work.
+
+## What survey data can and cannot do
+
+:::: {.columns}
+::: {.column width="50%"}
+**Strengths**
+
+- Exists, well understood, accessible
+- Representative of the whole population
+- Covers people *not* currently working
+- Observes health *while* working
+:::
+::: {.column width="50%"}
+**Weaknesses**
+
+- Self-reported health and work status
+- Prevalence at annual snapshots, not dated events
+- Transitions within a year unobserved
+- Tens of thousands of respondents at best
+:::
+::::
+
 
 ## Administrative vs. survey data — full trade-offs
 
