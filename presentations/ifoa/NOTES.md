@@ -166,3 +166,10 @@ references).
 - **Pandoc pptx splits a slide** when an image is followed by text, or when anything follows a `:::: {.columns}` block. Put the image in a column and keep trailing lines inside the last column.
 - **No automated slide preview**: Keynote's AppleScript `open` returns nothing for this pptx, and PowerPoint's repair prompt blocks scripted export. Check structure with python-pptx; Jon views in PowerPoint.
 - **Candidate after 18 Oct**: drop the qmd → pandoc → fix_pptx chain for pptx-only decks and build directly with python-pptx on the IFoA template (exact placement, no repair prompt). The qmd's remaining value is as a plain-text review surface.
+
+## Chris's v4 material (13 Oct 2026)
+
+Received by email from Chris Martin ("Material", 13 Oct, 16:13 BST). Stored in `from_chris_2026-10-13/` as received:
+
+- `IFoA_LIFE_Conference_Healthy_Workforce_2026-11-20v4_CM.pptx`: v4 of the combined deck, 35 slides (30 main and 5 appendix). It includes Jon's bridge slides (13–15: multi-state reminder, "same machinery, two traditions", survey data) and adds HWLE metric, life-table, estimate and comparison sections.
+- `ThoughtsOnHWPpresentation.docx`: Chris's occupational-health and GP notes on the drivers of long-term sickness absence (work type, treatment side effects, employer accommodation, workplace culture, individual capacity), plus comments on proposed changes (workplace health provision, early contact, the Healthy Working Lifecycle concept).
