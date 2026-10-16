@@ -205,3 +205,15 @@ About 40 minutes, walking through Chris's 16 Oct pack. Overall verdict: the cont
 
 **Next:** a further rehearsal at the wider WP call on Wed 21 Oct. David will submit the deck by **Sun 18 Oct**.
 
+### Data check: the straight 2015–2019 line in the employment-rate chart (16 Oct 2026)
+
+This was raised in the rehearsal, about the UK employment-rate chart (ONS LF24, 16–64, SA, annual averages), the right-hand chart on the "rise in long-term economic inactivity" slide. It was checked against the live ONS series (`timeseries/lf24/lms`, release of 15 Sep 2026).
+
+- **The line is real, not interpolated.** ONS annual values: 2015 73.7, 2016 74.3, 2017 74.9, 2018 75.5, 2019 76.1. The means of the 12 monthly values are 73.63, 74.34, 74.96, 75.53 and 76.08. The yearly steps (0.71, 0.62, 0.57, 0.55) look identical only after rounding to one decimal. Underneath, the monthly series wobbles (for example 2015 by quarter: 73.4, 73.4, 73.7, 74.1). Annual averaging of a steady post-recession recovery gives the straight look.
+- **The other years match ONS:** 2020 75.1, 2021 74.8, 2022 75.1, 2023 75.1, 2024 74.8, 2025 75.1.
+- **The inactivity chart and the decomposition slide also match** ONS LF69 / LF2O: 2,046k in 2019 to 2,792k in 2025 (+746k); rates of 4.92% in 2019 and 6.45% in 2025.
+- **Caveats worth one line in the talk:**
+  - The y-axis runs from 73.5% to 76.3%, so a 2.4-point rise looks steep.
+  - LFS estimates from 2023 on carry wider uncertainty: the response-rate problems, the reweighting, and the loss of accredited status. Check the current ONS LFS quality notice before quoting the exact wording.
+  - Neither is a data-integrity problem in the charts themselves.
+
