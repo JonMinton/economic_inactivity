@@ -173,3 +173,14 @@ Received by email from Chris Martin ("Material", 13 Oct, 16:13 BST). Stored in `
 
 - `IFoA_LIFE_Conference_Healthy_Workforce_2026-11-20v4_CM.pptx`: v4 of the combined deck, 35 slides (30 main and 5 appendix). It includes Jon's bridge slides (13–15: multi-state reminder, "same machinery, two traditions", survey data) and adds HWLE metric, life-table, estimate and comparison sections.
 - `ThoughtsOnHWPpresentation.docx`: Chris's occupational-health and GP notes on the drivers of long-term sickness absence (work type, treatment side effects, employer accommodation, workplace culture, individual capacity), plus comments on proposed changes (workplace health provision, early contact, the Healthy Working Lifecycle concept).
+
+## Chris's revised pack (16 Oct 2026)
+
+Received by email from Chris Martin ("Latest slides", 16 Oct, 13:54 BST, to Jon and David): "the revised slide pack with the revisions following the session Jon and I had Tuesday" (13 Oct). Stored in `from_chris_2026-10-16/` as received. Chris has confirmed the material can sit in this public repo, since nothing in it is private or commercially sensitive.
+
+- `IFoA_LIFE_2026_v4CM_plus_JM-clinical-drafts_2026-10-16.pptx`: 36 slides (31 main, then appendices from slide 32). Compared with v4:
+  - Chris's section is now slides 4–12: public interest, the rise in inactivity due to ill health, the problem, factors affecting absence and return, illness and disability factors, workplace and societal factors, and proposed changes with clinical caveats. These are built from Jon's clinical drafts of 13 Oct.
+  - Jon's bridge is slides 13–16.
+  - David's HWLE section is slides 17–28 and the conclusions 29–30.
+  - Section dividers carry presenter timings ("Chris 5-10 mins", "Jon 5 - 10 mins", "David 15 mins").
+- Submission deadline: 18 Oct (see the constraints above).
