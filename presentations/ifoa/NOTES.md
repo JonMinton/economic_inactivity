@@ -184,3 +184,24 @@ Received by email from Chris Martin ("Latest slides", 16 Oct, 13:54 BST, to Jon 
   - David's HWLE section is slides 17–28 and the conclusions 29–30.
   - Section dividers carry presenter timings ("Chris 5-10 mins", "Jon 5 - 10 mins", "David 15 mins").
 - Submission deadline: 18 Oct (see the constraints above).
+
+## Rehearsal, 16 Oct 2026 (14:00, Teams; David, Chris, Jon)
+
+About 40 minutes, walking through Chris's 16 Oct pack. Overall verdict: the content is strong, but there's too much for the slot, so cut two or three slides. David will refine the agenda slide once the content is aligned, and merge in his own refinements to his section.
+
+**Chris's section (about 10 minutes):** short typed narrative on each slide, with the examples kept for Q&A and the shared copy.
+- **The two "rise" charts:** highlight 2019/2020 on both (a bar or a highlighter band), because that's where things change. Check the ONS employment-rate series: it's a very straight line from 2015 to 2019, so it may be interpolated between survey points.
+- **The decomposition slide** (about 750,000 more people since 2019; population growth and ageing explain part, leaving more than half a million unexplained): make the teal, grey and dark-blue legend explicit, link the middle bar visibly to the figures, and underline the key figure.
+- **The reports slide:** keep the narrative. Frame it as the ratchet, not an impulse: inactivity rose after 2019 and didn't revert, and by 2023–24 that looked structural, which prompted the calls for action. Consider grouping the sources into three kinds (independent research bodies such as the Health Foundation, commissioned independent reviews, and government papers). Delete one surplus item. Chris to synthesise.
+- **The factors slide:** redraw as a diagram, with the social and economic context as the outer circle, and illness or disability in tension with the role inside it.
+- **The illness and disability vignettes:** keep the case-study format, reframed as **condition versus role**. Use "why it stops *their* work", and add a "would still be fit if…" line to each vignette (for example, in a non-manual job). David: this maps onto income-protection **own-occupation vs any-occupation** definitions, which the actuarial audience will recognise.
+- **The workplace and societal slide:** stays as is.
+- **One surplus slide:** deleted.
+- Chris will make these changes on 16 Oct, then hand the pen to David.
+
+**Jon's bridge (slides 13–16 in the 16 Oct pack):** no further changes; about 2–5 minutes. The framing: the health-economics multi-state approach is an independent rediscovery of the actuarial methods.
+
+**David's section:** a short intro on why the WP was set up (the Darzi review and Get Britain Working), then HWLE as a metric (a short history of the term), the model, and initial results.
+
+**Next:** a further rehearsal at the wider WP call on Wed 21 Oct. David will submit the deck by **Sun 18 Oct**.
+
