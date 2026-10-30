@@ -258,3 +258,5 @@ He'd like to see a "Claudic edit" "if that is quick and easy".
   - 3: agenda arithmetic, and how much the suggestions would save (3–4 slides).
   - 2 and 31: the typo notes.
   - 22 and 28: brief cross-references.
+
+**Sent** to David, cc Chris, by Jon on 30 Oct (afternoon), with the answers to David's four questions.

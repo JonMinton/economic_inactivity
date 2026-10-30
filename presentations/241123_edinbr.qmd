@@ -9,8 +9,8 @@ editor: visual
 
 ## Who am I?
 
--   *If you like this presentation*: Public Health Intelligence Adviser at Public Health Scotland
--   *If you don't like this presentation*: Just someone who likes coding in R
+- *If you like this presentation*: Public Health Intelligence Adviser at Public Health Scotland
+- *If you don't like this presentation*: Just someone who likes coding in R
 
 ## My challenge... now *your* challenge {.scrollable}
 
@@ -21,25 +21,25 @@ editor: visual
 
 ### [Drivers]{style="color: red;"}
 
--   **drivers**: Factors that influence probabilities of being economically active or inactive in some way
-    -   Can be divided into:
-        -   Downstream/Upstream
-        -   Proximate/Distal
-        -   Individual/Household/Local Area/Structural
+- **drivers**: Factors that influence probabilities of being economically active or inactive in some way
+  - Can be divided into:
+    - Downstream/Upstream
+    - Proximate/Distal
+    - Individual/Household/Local Area/Structural
 
 ### [Economic Inactivity]{style="color: blue;"}
 
--   **economic inactivity**:
-    -   Persons not contributing currently providing labour or labour supply:
-        -   Economic activity:
-            -   Employed (realised labour)
-            -   Unemployed (labour supply)
-        -   Economic inactivity:
-            -   Full-time student
-            -   Full-time carer
-            -   Long-term sick
-            -   Retired
-            -   Other (catch-all)
+- **economic inactivity**:
+  - Persons not contributing currently providing labour or labour supply:
+    - Economic activity:
+      - Employed (realised labour)
+      - Unemployed (labour supply)
+    - Economic inactivity:
+      - Full-time student
+      - Full-time carer
+      - Long-term sick
+      - Retired
+      - Other (catch-all)
 :::
 
 ## Useful ideas/concepts
@@ -47,24 +47,24 @@ editor: visual
 ::: panel-tabset
 ### General
 
--   Epidemiological concepts
--   Modelling concepts
+- Epidemiological concepts
+- Modelling concepts
 
 ### Epidemiological
 
--   Path dependency
--   Demography
--   'Explained by'
-    -   Population Attributable Fractions
-    -   Ideal Alternative Exposure Scenarios
--   Baseline and Counterfactual scenarios
+- Path dependency
+- Demography
+- 'Explained by'
+  - Population Attributable Fractions
+  - Ideal Alternative Exposure Scenarios
+- Baseline and Counterfactual scenarios
 
 ### Modelling
 
--   Markov modelling
--   Generalised Linear modelling
--   Model fitting
--   Using models for prediction/projection
+- Markov modelling
+- Generalised Linear modelling
+- Model fitting
+- Using models for prediction/projection
 :::
 
 ## GLM fundamentals {.scrollable}
@@ -74,13 +74,10 @@ editor: visual
 
 **Stochastic Component**
 
-$$
-Y_i \sim f(\theta_i, \alpha)
-$$ **Systematic Component**
+$$Y_i \sim f(\theta_i, \alpha)$$
+**Systematic Component**
 
-$$
-\theta_i = g(X_i, \beta)
-$$
+$$\theta_i = g(X_i, \beta)$$
 
 Source: King, Tomz, Wittenberg (2000), [Making the most of Statistical Analyses: Improving Interpretation and presentation](https://gking.harvard.edu/files/making.pdf)
 
@@ -88,27 +85,20 @@ Source: King, Tomz, Wittenberg (2000), [Making the most of Statistical Analyses:
 
 **Stochastic**
 
-$$
-Y_i \sim Bernoulli(\pi_i)
-$$ **Systematic**
+$$Y_i \sim Bernoulli(\pi_i)$$
+**Systematic**
 
-$$
-\pi_i = \dfrac{1}{1 + e^{-X\beta}}
-$$
+$$\pi_i = \dfrac{1}{1 + e^{-X\beta}}$$
 
 ### Linear regression
 
 **Stochastic**
 
-$$
-Y_i \sim N(\mu_i, \sigma^2)
-$$
+$$Y_i \sim N(\mu_i, \sigma^2)$$
 
 **Systematic**
 
-$$
-\mu_i = X_i \beta
-$$
+$$\mu_i = X_i \beta$$
 :::
 
 ## Model Fitting and Model Prediction {.scrollable}
@@ -116,40 +106,40 @@ $$
 ::: panel-tabset
 ### Model fitting challenge
 
--   **Satisfy loss function**: Find values of $\beta$ such that discrepency between $y_i$ (observed response) and $Y_i$ (predicted response given $X_i$, observed predictors) is minimised.
+- **Satisfy loss function**: Find values of $\beta$ such that discrepency between $y_i$ (observed response) and $Y_i$ (predicted response given $X_i$, observed predictors) is minimised.
 
--   Statisticians usually use likelihood theory to justify the loss function. 'Data scientists' can be a bit wilder. (e.g. RMSE on out-of-sample test data)
+- Statisticians usually use likelihood theory to justify the loss function. 'Data scientists' can be a bit wilder. (e.g. RMSE on out-of-sample test data)
 
 ### Model prediction
 
--   Once the best model parameters $\beta$ have been identified for our model $M$, we can now swap out observed predictors $X_i$ for hypothetical predictors $X^{(H)}$ to get conditional predictions $Y | X^{(H)}$
+- Once the best model parameters $\beta$ have been identified for our model $M$, we can now swap out observed predictors $X_i$ for hypothetical predictors $X^{(H)}$ to get conditional predictions $Y | X^{(H)}$
 
 ### Modelled 'trials'
 
--   Let's split the predictors $X$ into $(X^*, Z)$, where $X^*$ is variables we aren't interested in but need to control for, and $Z$ are the exposure variables for which we are interested in modelling the causal effects on $Y$.
+- Let's split the predictors $X$ into $(X^*, Z)$, where $X^*$ is variables we aren't interested in but need to control for, and $Z$ are the exposure variables for which we are interested in modelling the causal effects on $Y$.
 
--   $H_1 := (X^*, Z=1)$ : The exposure is 'on'
+- $H_1 := (X^*, Z=1)$ : The exposure is 'on'
 
--   $H_0 := (X^*, Z=0)$ : The exposure is 'off'
+- $H_0 := (X^*, Z=0)$ : The exposure is 'off'
 
--   Comparison of $Y|H_1$ and $Y|H_0$ gives an effect estimate of $Z$ on $Y$, i.e. the amount that $Y$ changes as a result of $Z$, holding all else constant.
+- Comparison of $Y|H_1$ and $Y|H_0$ gives an effect estimate of $Z$ on $Y$, i.e. the amount that $Y$ changes as a result of $Z$, holding all else constant.
 
--   In practice:
+- In practice:
 
-    -   Many exposures are not either 'on' or 'off', but continuous
-    -   Rather than $H_1$ being $Z=1$ for all observations, we might use the observed values of $Z$ from an indicative dataset. (Not everyone smokes/ has diabetes etc)
+  - Many exposures are not either 'on' or 'off', but continuous
+  - Rather than $H_1$ being $Z=1$ for all observations, we might use the observed values of $Z$ from an indicative dataset. (Not everyone smokes/ has diabetes etc)
 
 ### Path dependency
 
--   We can use the same GLM 'chassis' to model the influence of history.
+- We can use the same GLM 'chassis' to model the influence of history.
 
--   Swap out $Y$ for $Y_{T+1}$ on the response side
+- Swap out $Y$ for $Y_{T+1}$ on the response side
 
--   Include $Y_T$ on the predictor side
+- Include $Y_T$ on the predictor side
 
--   If Y is continuous we have conventional time-series modelling
+- If Y is continuous we have conventional time-series modelling
 
--   If Y is discrete we have Markov modelling (broadly speaking)
+- If Y is discrete we have Markov modelling (broadly speaking)
 :::
 
 ## In practice {.scrollable}
@@ -159,9 +149,9 @@ $$
 
 We require data where:
 
--   we can observe the same individuals transitioning between discrete states over time
--   there are adequate demographic controls
--   there are driver/exposure variables of interest
+- we can observe the same individuals transitioning between discrete states over time
+- there are adequate demographic controls
+- there are driver/exposure variables of interest
 
 I have used UK Household Longitudinal Study (UKHLS), which grew out of the British Household Panel Survey (BHPS).
 
@@ -169,17 +159,17 @@ I have used UK Household Longitudinal Study (UKHLS), which grew out of the Briti
 
 A model that *adequately* controls for path dependency $Y_T$ and demography $X^*$
 
--   Different specifications can do this. I used AIC & BIC to decide between different possible specifications
+- Different specifications can do this. I used AIC & BIC to decide between different possible specifications
 
 ### Exposure model
 
 A model that incrementally builds on the Foundational model to include at least one exposure variable as well.
 
--   Decision guided both by substantive interest in a given exposure, and whether AIC and BIC suggest it is 'better' than the Foundational model
+- Decision guided both by substantive interest in a given exposure, and whether AIC and BIC suggest it is 'better' than the Foundational model
 
 ### Continuous variables as exposures
 
--   Absent clear epidemiological knowledge otherwise, continuous exposures are standardised then, in the counterfactual scenario, moved one standardised unit in the 'good' direction.
+- Absent clear epidemiological knowledge otherwise, continuous exposures are standardised then, in the counterfactual scenario, moved one standardised unit in the 'good' direction.
 :::
 
 ## Illustration using logit model
@@ -282,9 +272,9 @@ pred_preds
 ::: panel-tabset
 ### Logit to multinomial logit
 
--   multinomial logit extends from two mutually exclusive states to K mutually exclusive states
--   implemented using `mlogit` function in `nnet` package
--   more computationally intensive but not different conceptually
+- multinomial logit extends from two mutually exclusive states to K mutually exclusive states
+- implemented using `mlogit` function in `nnet` package
+- more computationally intensive but not different conceptually
 
 ### Example data
 
@@ -492,9 +482,9 @@ sim_relative_change
 
 ### Interpretation
 
--   "If the effects of clinical depression on economic inactivity were fully mitigated, then the size of the economically inactive long-term sick population could be reduced by around a tenth."[^1]
+- "If the effects of clinical depression on economic inactivity were fully mitigated, then the size of the economically inactive long-term sick population could be reduced by around a tenth."[^1]
 
--   "Around a tenth of economic inactivity due to long-term sickness is explained by clinical depression."[^2]
+- "Around a tenth of economic inactivity due to long-term sickness is explained by clinical depression."[^2]
 :::
 
 [^1]: Caveat emptor
@@ -560,17 +550,17 @@ flowchart TB
 
 ## Concluding thoughts
 
--   Simple question, complicated methods
--   LM vs GLM
--   Many 'heroic assumptions'
--   Many potential refinements
--   Many potential applications
+- Simple question, complicated methods
+- LM vs GLM
+- Many 'heroic assumptions'
+- Many potential refinements
+- Many potential applications
 
 ## Contact
 
--   jon.will.minton\@gmail.com
--   jon.minton\@phs.scot
--   @jonminton on the X social media platform
--   Website: https://jonminton.net
+- jon.will.minton\@gmail.com
+- jon.minton\@phs.scot
+- @jonminton on the X social media platform
+- Website: https://jonminton.net
 
 [Thanks for listening!]{style="color: purple; font-family: cursive; font-size: larger;"}
