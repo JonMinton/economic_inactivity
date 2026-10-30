@@ -217,3 +217,44 @@ This was raised in the rehearsal, about the UK employment-rate chart (ONS LF24, 
   - LFS estimates from 2023 on carry wider uncertainty: the response-rate problems, the reweighting, and the loss of accredited status. Check the current ONS LFS quality notice before quoting the exact wording.
   - Neither is a data-integrity problem in the charts themselves.
 
+
+## David's 20a deck and the Claudic edit (30 Oct 2026)
+
+**Received:** `IFoA_Life_Conference_2026_Healthy_Workforce_2026-11-20a.pptx`, from David on 30 Oct at 11:59 (thread 19f8a5705c604ba0, to Chris and Jon). It is his response to Giada's review of 25 Oct, which said there were too many slides for 35 minutes of talking, some wordy slides could become speaker notes, and the colours weren't IFoA brand colours. David:
+- recoloured his own section;
+- added coloured conclusion bars to Jon's slides 14–15;
+- keeps all his slides (17–28) at 15 minutes;
+- reads Chris's plan as 5 slides at 2 minutes. Chris's own figure is unsettled: 6 minutes on 24 Oct, "three slides at 2 minutes each" on 27 Oct.
+
+He'd like to see a "Claudic edit" "if that is quick and easy".
+
+**Jon's answers to David (30 Oct):**
+1. Happy with the colour bars.
+2. HWLE: a speaker note on slide 13 to unpack it (below).
+3. Yes to qualifications.
+4. Happy with a LinkedIn post. Crystallise has already posted about the conference, tagging Jon, and he's fine with that.
+
+**The edit:** `IFoA_Life_Conference_2026_Healthy_Workforce_2026-11-20a_JM-claudic-edit.pptx`, made by `claudic_edit_2026-10-30.py`. No slides were removed or reordered. It opens cleanly in PowerPoint with all 35 slides.
+- **Typos fixed:**
+  - Slide 2: date 2024 → 2026; "long-term term sickness" → "long-term sickness" (also on slide 31).
+  - Slide 6: a double space.
+  - Slide 9: "IIlness" → "Illness".
+  - Slide 23: "rates : males" → "rates: males".
+  - Slide 25: "Parker et al.(2020)" → "Parker et al. (2020)"; "Study of Aging" → "Study of Ageing".
+  - Slide 27: "retirements ages" → "retirement ages".
+  - Slide 31: "Sir Mayfield" → "Sir Charlie Mayfield".
+  - Slide 32: "one limitations was" → "one limitation was".
+  - Notes: 18 "Lievre" → "Lièvre"; 20 "paramerisation" → "parameterisation"; 33 and 34 "English Longitudinal Survey of Aging" → "English Longitudinal Study of Ageing".
+  - Slide 1's "IFoA Life / Conference 2026" is a deliberate line break, so it was left alone.
+- **Qualifications:** "Dr. Jon Minton" on slide 2, in the same style as "Dr. Chris Martin".
+- **Slide 13 speaker note** (appended): a reminder to unpack HWLE there and say David defines it later. From a modelling perspective, working life can be bounded three ways: (1) retirement as an absorbing state, like death; (2) only the time accumulated in the feeder states on the way to retirement; (3) only paths that start and end within working age. David's model is closest to (1) and (3).
+- **PowerPoint comments on David's slides** (author Jon Minton, marked "Claude-assisted"). Suggestions only; nothing removed.
+  - 17 + 18: combine the two timelines.
+  - 19 vs 28: they overlap; drop one, or cut 28 back to its headlines.
+  - 20: move the table of rate bases to the appendix.
+  - 21 + 22: same numbers twice; keep the chart, move the table to the appendix.
+  - 23 + 24: combine; move the worked percentages to notes.
+  - 25: label the basis of 13.6 and 12.48 on the slide; bullets to notes.
+  - 3: agenda arithmetic, and how much the suggestions would save (3–4 slides).
+  - 2 and 31: the typo notes.
+  - 22 and 28: brief cross-references.
